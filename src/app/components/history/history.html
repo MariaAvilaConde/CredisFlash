@@ -1,0 +1,144 @@
+<div class="history-page">
+  <div class="page-header">
+    <div>
+      <h1>Historial de Transacciones</h1>
+      <p>Transacciones consultadas directamente desde la blockchain</p>
+    </div>
+    @if (web3.isConnected()) {
+      <button class="btn-reload" (click)="loadHistory()" [disabled]="web3.isLoading()">
+        @if (web3.isLoading()) {
+          <span class="spinner"></span> Cargando...
+        } @else {
+          🔄 Actualizar
+        }
+      </button>
+    }
+  </div>
+
+  @if (!web3.isConnected()) {
+    <div class="connect-prompt">
+      <div class="connect-icon">📜</div>
+      <h2>Wallet no conectada</h2>
+      <p>Conecta MetaMask para ver tu historial de transacciones</p>
+      <button class="btn-primary" (click)="connect()" [disabled]="web3.isLoading()">
+        🦊 Conectar MetaMask
+      </button>
+    </div>
+  } @else {
+    <!-- Network info bar -->
+    <div class="network-bar">
+      <span class="net-dot"></span>
+      <span>Mostrando transacciones en: <strong>{{ web3.currentNetwork?.chainName ?? 'Red desconocida' }}</strong></span>
+      @if (web3.currentNetwork?.explorerApiUrl) {
+        <span class="api-badge">⚡ API</span>
+      } @else {
+        <span class="rpc-badge">🔍 RPC scan</span>
+      }
+      @if (web3.currentNetwork?.blockExplorerUrls?.[0]) {
+        <a [href]="web3.currentNetwork!.blockExplorerUrls[0]" target="_blank" class="explorer-link">
+          Ver explorador ↗
+        </a>
+      }
+    </div>
+
+    @if (web3.errorMessage()) {
+      <div class="alert" [class]="web3.errorType() ?? 'error'">
+        <span>{{ web3.errorType() === 'warning' ? '⚠️' : web3.errorType() === 'info' ? 'ℹ️' : '❌' }}</span>
+        {{ web3.errorMessage() }}
+        <button class="alert-close" (click)="web3.clearError()">✕</button>
+      </div>
+    }
+
+    @if (web3.isLoading()) {
+      <div class="loading-state">
+        <div class="loading-spinner"></div>
+        <p>Consultando la blockchain...</p>
+        <span>Esto puede tardar unos segundos</span>
+      </div>
+    } @else if (web3.transactions().length === 0) {
+      <div class="empty-state">
+        <span class="empty-icon">📭</span>
+        <h3>Sin transacciones</h3>
+        <p>No se encontraron transacciones para esta dirección en la red actual.</p>
+        <button class="btn-primary" (click)="loadHistory()">
+          🔍 Buscar transacciones
+        </button>
+      </div>
+    } @else {
+      <!-- Stats -->
+      <div class="stats-row">
+        <div class="stat-chip">
+          <span class="stat-n">{{ web3.transactions().length }}</span>
+          <span>Transacciones</span>
+        </div>
+        <div class="stat-chip">
+          <span class="stat-n success">{{ web3.transactions() | successCount }}</span>
+          <span>Exitosas</span>
+        </div>
+        <div class="stat-chip">
+          <span class="stat-n">{{ web3.currentNetwork?.nativeCurrency?.symbol ?? 'ETH' }}</span>
+          <span>Moneda</span>
+        </div>
+      </div>
+
+      <!-- Table -->
+      <div class="tx-table-wrapper">
+        <table class="tx-table">
+          <thead>
+            <tr>
+              <th>Tipo</th>
+              <th>Hash</th>
+              <th>De</th>
+              <th>Para</th>
+              <th>Cantidad</th>
+              <th>Bloque</th>
+              <th>Fecha</th>
+              <th>Estado</th>
+              <th>Explorer</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (tx of web3.transactions(); track tx.hash) {
+              <tr class="tx-row" [class.outgoing]="isOutgoing(tx)">
+                <td>
+                  <span class="type-badge" [class.out]="isOutgoing(tx)">
+                    {{ isOutgoing(tx) ? '↗ Salida' : '↙ Entrada' }}
+                  </span>
+                </td>
+                <td>
+                  <code class="hash-cell">{{ shortHash(tx.hash) }}</code>
+                </td>
+                <td>
+                  <code class="addr-cell" [class.mine]="tx.from.toLowerCase() === web3.account()?.toLowerCase()">
+                    {{ shortAddr(tx.from) }}
+                  </code>
+                </td>
+                <td>
+                  <code class="addr-cell" [class.mine]="tx.to.toLowerCase() === web3.account()?.toLowerCase()">
+                    {{ shortAddr(tx.to) }}
+                  </code>
+                </td>
+                <td class="amount-cell">
+                  <span [class.out-amount]="isOutgoing(tx)" [class.in-amount]="!isOutgoing(tx)">
+                    {{ isOutgoing(tx) ? '-' : '+' }}{{ tx.value }}
+                    {{ web3.currentNetwork?.nativeCurrency?.symbol ?? 'ETH' }}
+                  </span>
+                </td>
+                <td class="block-cell">{{ tx.blockNumber }}</td>
+                <td class="date-cell">{{ tx.timestamp | date:'dd/MM/yy HH:mm' }}</td>
+                <td>
+                  <span class="status-badge" [class]="tx.status">{{ tx.status }}</span>
+                </td>
+                <td>
+                  <a [href]="tx.explorerUrl" target="_blank" rel="noopener" class="explorer-btn" title="Ver en explorador">
+                    🔍 ↗
+                  </a>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  }
+</div>

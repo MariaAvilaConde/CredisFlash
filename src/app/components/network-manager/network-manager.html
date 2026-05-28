@@ -1,0 +1,222 @@
+<div class="networks-page">
+  <div class="page-header">
+    <div>
+      <h1>Gestión de Redes</h1>
+      <p>Cambia, añade o desconecta redes blockchain en MetaMask</p>
+    </div>
+    @if (web3.isConnected()) {
+      <button class="btn-add" (click)="showAddForm.update(v => !v)">
+        {{ showAddForm() ? '✕ Cancelar' : '＋ Añadir red' }}
+      </button>
+    }
+  </div>
+
+  @if (!web3.isConnected()) {
+    <div class="connect-prompt">
+      <div class="connect-icon">🌐</div>
+      <h2>Wallet no conectada</h2>
+      <p>Conecta MetaMask para gestionar las redes</p>
+      <button class="btn-primary" (click)="connect()" [disabled]="web3.isLoading()">
+        🦊 Conectar MetaMask
+      </button>
+    </div>
+  } @else {
+
+    <!-- Current network banner -->
+    <div class="current-network-card">
+      <div class="cn-label">Red activa</div>
+      <div class="cn-info">
+        <div class="cn-dot"></div>
+        <div>
+          <div class="cn-name">
+            {{ getNetworkIcon(web3.chainId() ?? '') }}
+            {{ web3.currentNetwork?.chainName ?? 'Red desconocida' }}
+          </div>
+          <div class="cn-id">Chain ID: {{ web3.chainId() }}</div>
+        </div>
+        @if (web3.currentNetwork?.blockExplorerUrls?.[0]) {
+          <a [href]="web3.currentNetwork!.blockExplorerUrls[0]" target="_blank" class="cn-explorer">
+            Ver explorador ↗
+          </a>
+        }
+      </div>
+    </div>
+
+    <!-- Error / info alert -->
+    @if (web3.errorMessage()) {
+      <div class="alert" [class]="web3.errorType() ?? 'error'">
+        <span>{{ web3.errorType() === 'warning' ? '⚠️' : web3.errorType() === 'info' ? 'ℹ️' : '❌' }}</span>
+        {{ web3.errorMessage() }}
+        <button class="alert-close" (click)="web3.clearError()">✕</button>
+      </div>
+    }
+
+    <!-- Add custom network form -->
+    @if (showAddForm()) {
+      <div class="add-form-card">
+        <h3>➕ Añadir red personalizada</h3>
+        <p class="form-hint">Rellena los datos de la red. El Chain ID debe estar en hexadecimal (ej: <code>0x1234</code>).</p>
+
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Chain ID * <span class="hint">(hex, ej: 0x1234)</span></label>
+            <input type="text" class="form-input" placeholder="0x1234"
+              [ngModel]="form().chainId" (ngModelChange)="updateForm('chainId', $event)" />
+          </div>
+          <div class="form-group">
+            <label>Nombre de la red *</label>
+            <input type="text" class="form-input" placeholder="Mi Red Custom"
+              [ngModel]="form().chainName" (ngModelChange)="updateForm('chainName', $event)" />
+          </div>
+          <div class="form-group">
+            <label>Símbolo de moneda * <span class="hint">(ej: ETH, MATIC)</span></label>
+            <input type="text" class="form-input" placeholder="ETH"
+              [ngModel]="form().nativeCurrency?.symbol" (ngModelChange)="updateForm('symbol', $event)" />
+          </div>
+          <div class="form-group">
+            <label>URL RPC *</label>
+            <input type="url" class="form-input" placeholder="https://rpc.miRed.io"
+              [ngModel]="form().rpcUrls?.[0]" (ngModelChange)="updateForm('rpcUrl', $event)" />
+          </div>
+          <div class="form-group">
+            <label>URL Explorador de bloques</label>
+            <input type="url" class="form-input" placeholder="https://explorer.miRed.io"
+              [ngModel]="form().blockExplorerUrls?.[0]" (ngModelChange)="updateForm('explorerUrl', $event)" />
+          </div>
+          <div class="form-group">
+            <label>API del explorador <span class="hint">(para historial de txs)</span></label>
+            <input type="url" class="form-input" placeholder="https://api.explorer.miRed.io/api"
+              [ngModel]="form().explorerApiUrl" (ngModelChange)="updateForm('explorerApiUrl', $event)" />
+          </div>
+        </div>
+
+        @if (formError()) {
+          <div class="alert error">❌ {{ formError() }}</div>
+        }
+
+        <div class="form-actions">
+          <button class="btn-primary" (click)="submitCustomNetwork()" [disabled]="web3.switchingChainId() !== null">
+            @if (web3.switchingChainId() !== null) {
+              <span class="spinner"></span> Añadiendo...
+            } @else {
+              ➕ Añadir y conectar
+            }
+          </button>
+          <button class="btn-secondary" (click)="showAddForm.set(false)">Cancelar</button>
+        </div>
+      </div>
+    }
+
+    <!-- Tabs -->
+    <div class="tabs">
+      <button class="tab" [class.active]="activeTab() === 'all'" (click)="activeTab.set('all')">
+        Todas <span class="tab-count">{{ web3.allNetworks().length }}</span>
+      </button>
+      <button class="tab" [class.active]="activeTab() === 'testnet'" (click)="activeTab.set('testnet')">
+        Testnets <span class="tab-count">{{ testnets().length }}</span>
+      </button>
+      <button class="tab" [class.active]="activeTab() === 'mainnet'" (click)="activeTab.set('mainnet')">
+        Mainnets <span class="tab-count">{{ mainnets().length }}</span>
+      </button>
+      <button class="tab" [class.active]="activeTab() === 'custom'" (click)="activeTab.set('custom')">
+        Custom <span class="tab-count">{{ customNets().length }}</span>
+      </button>
+    </div>
+
+    <!-- Networks grid -->
+    @if (displayedNetworks().length === 0) {
+      <div class="empty-tab">
+        <span>📭</span>
+        <p>No hay redes en esta categoría.</p>
+        @if (activeTab() === 'custom') {
+          <button class="btn-secondary" (click)="showAddForm.set(true)">➕ Añadir red personalizada</button>
+        }
+      </div>
+    } @else {
+      <div class="networks-grid">
+        @for (network of displayedNetworks(); track network.chainId) {
+          <div class="network-card" [class.active]="isActive(network)" [class.custom]="network.isCustom">
+            <div class="nc-header">
+              <div class="nc-icon">{{ getNetworkIcon(network.chainId) }}</div>
+              <div class="nc-info">
+                <h3>{{ network.chainName }}</h3>
+                <code>{{ network.chainId }}</code>
+              </div>
+              <div class="nc-badges">
+                @if (isActive(network)) {
+                  <div class="active-badge">● Activa</div>
+                }
+                @if (network.isCustom) {
+                  <div class="custom-badge">Custom</div>
+                }
+              </div>
+            </div>
+
+            <div class="nc-details">
+              <div class="nc-detail">
+                <span>Moneda</span>
+                <strong>{{ network.nativeCurrency.symbol }}</strong>
+              </div>
+              <div class="nc-detail">
+                <span>RPC</span>
+                <code class="rpc-url">{{ network.rpcUrls[0] }}</code>
+              </div>
+              @if (network.explorerApiUrl) {
+                <div class="nc-detail">
+                  <span>API Historial</span>
+                  <span class="api-ok">✓ Disponible</span>
+                </div>
+              } @else {
+                <div class="nc-detail">
+                  <span>API Historial</span>
+                  <span class="api-none">Escaneo RPC</span>
+                </div>
+              }
+            </div>
+
+            <div class="nc-actions">
+              @if (!isActive(network)) {
+                <button class="btn-switch" (click)="switchTo(network)" [disabled]="isSwitching(network)">
+                  @if (isSwitching(network)) {
+                    <span class="spinner"></span> Cambiando...
+                  } @else {
+                    🔄 Cambiar a esta red
+                  }
+                </button>
+              } @else {
+                <div class="active-indicator">✅ Red actualmente activa</div>
+              }
+
+              @if (network.isCustom) {
+                <button class="btn-remove" (click)="deleteCustom(network)" title="Eliminar red custom">
+                  🗑️ Eliminar
+                </button>
+              } @else {
+                <button class="btn-remove" (click)="remove(network)" [disabled]="web3.isLoading()" title="Desconectar red">
+                  🔌 Desconectar
+                </button>
+              }
+            </div>
+
+            @if (network.blockExplorerUrls[0]) {
+              <a [href]="network.blockExplorerUrls[0]" target="_blank" class="nc-explorer-link">
+                🔍 Ver explorador ↗
+              </a>
+            }
+          </div>
+        }
+      </div>
+    }
+
+    <!-- Info -->
+    <div class="info-box">
+      <h3>ℹ️ ¿Cómo funciona?</h3>
+      <ul>
+        <li><strong>Cambiar red:</strong> Si la red ya está en MetaMask, cambia directamente. Si no existe, se añade automáticamente.</li>
+        <li><strong>Desconectar:</strong> Revoca los permisos de la wallet en la red seleccionada.</li>
+        <li><strong>Historial:</strong> Las redes con API de explorador cargan el historial al instante. Las demás usan escaneo RPC (más lento).</li>
+        <li><strong>Red custom:</strong> Puedes añadir cualquier red EVM compatible rellenando el formulario.</li>
+      </ul>
+    </div>
+  }
+</div>

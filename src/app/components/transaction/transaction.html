@@ -1,0 +1,154 @@
+<div class="tx-page">
+  <div class="page-header">
+    <h1>Enviar Transacción</h1>
+    <p>Transfiere fondos de address a address en la blockchain</p>
+  </div>
+
+  @if (!web3.isConnected()) {
+    <div class="connect-prompt">
+      <div class="connect-icon">💸</div>
+      <h2>Wallet no conectada</h2>
+      <p>Conecta MetaMask para enviar transacciones</p>
+      <button class="btn-primary" (click)="connect()" [disabled]="web3.isLoading()">
+        🦊 Conectar MetaMask
+      </button>
+    </div>
+  } @else {
+    <div class="tx-layout">
+      <!-- Form -->
+      <div class="card tx-form-card">
+        <div class="card-header">
+          <span>💸</span>
+          <h3>Nueva Transacción</h3>
+        </div>
+
+        <!-- Network info -->
+        <div class="network-banner">
+          <span class="net-dot"></span>
+          <span>Red: <strong>{{ web3.currentNetwork?.chainName ?? 'Desconocida' }}</strong></span>
+          <span class="balance-info">Balance: <strong>{{ web3.balance() }} {{ web3.currentNetwork?.nativeCurrency?.symbol ?? 'ETH' }}</strong></span>
+        </div>
+
+        <!-- From -->
+        <div class="form-group">
+          <label>Desde (tu dirección)</label>
+          <div class="input-readonly">
+            <code>{{ web3.account() }}</code>
+          </div>
+        </div>
+
+        <!-- To -->
+        <div class="form-group">
+          <label for="toAddr">Dirección destino *</label>
+          <input
+            id="toAddr"
+            type="text"
+            class="form-input"
+            [class.valid]="isValidAddress(toAddress())"
+            [class.invalid]="toAddress().length > 0 && !isValidAddress(toAddress())"
+            placeholder="0x..."
+            [ngModel]="toAddress()"
+            (ngModelChange)="toAddress.set($event)"
+          />
+          @if (toAddress().length > 0 && !isValidAddress(toAddress())) {
+            <span class="field-error">Dirección Ethereum inválida</span>
+          }
+          @if (isValidAddress(toAddress())) {
+            <span class="field-ok">✓ Dirección válida</span>
+          }
+        </div>
+
+        <!-- Amount -->
+        <div class="form-group">
+          <label for="amount">Cantidad ({{ web3.currentNetwork?.nativeCurrency?.symbol ?? 'ETH' }}) *</label>
+          <div class="amount-input-wrapper">
+            <input
+              id="amount"
+              type="number"
+              class="form-input"
+              [class.valid]="isValidAmount(amount())"
+              [class.invalid]="amount().length > 0 && !isValidAmount(amount())"
+              placeholder="0.001"
+              min="0"
+              step="0.001"
+              [ngModel]="amount()"
+              (ngModelChange)="amount.set($event)"
+            />
+            <span class="amount-symbol">{{ web3.currentNetwork?.nativeCurrency?.symbol ?? 'ETH' }}</span>
+          </div>
+          @if (amount().length > 0 && !isValidAmount(amount())) {
+            <span class="field-error">Ingresa una cantidad válida mayor a 0</span>
+          }
+        </div>
+
+        <!-- Error -->
+      @if (web3.errorMessage()) {
+        <div class="alert" [class]="web3.errorType() ?? 'error'">
+          <span>{{ web3.errorType() === 'warning' ? '⚠️' : web3.errorType() === 'info' ? 'ℹ️' : '❌' }}</span>
+          {{ web3.errorMessage() }}
+          <button class="alert-close" (click)="web3.clearError()">✕</button>
+        </div>
+      }
+
+      <!-- Send button -->
+        <button
+          class="btn-send"
+          [disabled]="!canSend"
+          (click)="send()"
+        >
+          @if (web3.isLoading()) {
+            <span class="spinner"></span> Procesando...
+          } @else {
+            <span>🚀</span> Enviar Transacción
+          }
+        </button>
+      </div>
+
+      <!-- Success / Result -->
+      @if (txHash()) {
+        <div class="card success-card">
+          <div class="success-icon">✅</div>
+          <h3>{{ successMsg() }}</h3>
+          <p class="tx-hash-label">Hash de la transacción:</p>
+          <code class="tx-hash-full">{{ txHash() }}</code>
+
+          <div class="explorer-section">
+            <p>Ver en el explorador de bloques:</p>
+            <a
+              [href]="explorerTxUrl"
+              target="_blank"
+              rel="noopener"
+              class="explorer-btn"
+            >
+              <span>🔍</span>
+              Ver en {{ web3.currentNetwork?.chainName ?? 'Explorer' }}
+              <span class="ext-icon">↗</span>
+            </a>
+          </div>
+
+          <div class="tx-summary">
+            <div class="summary-row">
+              <span>Red</span>
+              <strong>{{ web3.currentNetwork?.chainName }}</strong>
+            </div>
+            <div class="summary-row">
+              <span>Cantidad</span>
+              <strong>{{ amount() || '—' }} {{ web3.currentNetwork?.nativeCurrency?.symbol ?? 'ETH' }}</strong>
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- Info panel -->
+      <div class="card info-card">
+        <h3>ℹ️ Información importante</h3>
+        <ul class="info-list">
+          <li>Las transacciones en blockchain son <strong>irreversibles</strong>. Verifica la dirección destino antes de enviar.</li>
+          <li>Se cobrarán <strong>gas fees</strong> por la red para procesar la transacción.</li>
+          <li>El tiempo de confirmación varía según la red y la congestión.</li>
+          <li>Puedes verificar el estado de tu transacción en el explorador de bloques.</li>
+        </ul>
+      </div>
+    </div>
+  }
+</div>

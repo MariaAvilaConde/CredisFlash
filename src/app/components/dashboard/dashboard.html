@@ -1,0 +1,202 @@
+<div class="dashboard-page">
+  <div class="page-header">
+    <h1>Dashboard</h1>
+    <p>Gestiona tu wallet y activos en blockchain</p>
+  </div>
+
+  @if (!web3.isConnected()) {
+    <!-- NOT CONNECTED -->
+    <div class="connect-prompt">
+      <div class="connect-icon">🦊</div>
+      <h2>Conecta tu Wallet</h2>
+      <p>Para acceder al dashboard necesitas conectar una wallet Web3</p>
+      @if (!web3.hasAnyWallet()) {
+        <div class="alert warning">
+          <span>⚠️</span>
+          No se detectó ninguna wallet.
+          <a href="https://metamask.io" target="_blank">Instalar MetaMask</a>
+          · <a href="https://paliwallet.com" target="_blank">Instalar Pali</a>
+        </div>
+      } @else {
+        <button class="btn-primary" (click)="connect()" [disabled]="web3.isLoading()">
+          @if (web3.isLoading()) {
+            <span class="spinner"></span> Conectando...
+          } @else {
+            🦊 Conectar MetaMask
+          }
+        </button>
+      }
+      @if (web3.errorMessage()) {
+        <div class="alert" [class]="web3.errorType() ?? 'error'">
+          <span>{{ web3.errorType() === 'warning' ? '⚠️' : '❌' }}</span>
+          {{ web3.errorMessage() }}
+          <button class="alert-close" (click)="web3.clearError()">✕</button>
+        </div>
+      }
+    </div>
+  } @else {
+    <!-- CONNECTED -->
+    <div class="dashboard-grid">
+      <!-- Wallet Card -->
+      <div class="card wallet-card">
+        <div class="card-header">
+          <span class="card-icon">👛</span>
+          <h3>Mi Wallet</h3>
+          <div class="status-badge connected">● Conectado</div>
+        </div>
+        <div class="address-display">
+          <span class="address-label">Dirección</span>
+          <div class="address-row">
+            <code class="address-text">{{ shortAddress(web3.account()) }}</code>
+            <button class="icon-btn" (click)="copyAddress()" title="Copiar dirección">
+              📋
+            </button>
+          </div>
+        </div>
+        <div class="balance-display">
+          <span class="balance-label">Balance</span>
+          <div class="balance-value">
+            <span class="balance-amount">{{ web3.balance() }}</span>
+            <span class="balance-symbol">{{ web3.currentNetwork?.nativeCurrency?.symbol ?? 'ETH' }}</span>
+          </div>
+        </div>
+        <button class="btn-refresh" (click)="web3.refreshBalance()">
+          🔄 Actualizar balance
+        </button>
+      </div>
+
+      <!-- Network Card -->
+      <div class="card network-card">
+        <div class="card-header">
+          <span class="card-icon">🌐</span>
+          <h3>Red Activa</h3>
+          <button class="btn-change-net" (click)="showNetworkPicker.update(v => !v)">
+            {{ showNetworkPicker() ? '✕ Cerrar' : '🔄 Cambiar' }}
+          </button>
+        </div>
+
+        <!-- Current network info -->
+        @if (!showNetworkPicker()) {
+          @if (web3.currentNetwork) {
+            <div class="network-info">
+              <div class="net-name">
+                <span>{{ getNetworkIcon(web3.currentNetwork.chainId) }}</span>
+                {{ web3.currentNetwork.chainName }}
+              </div>
+              <div class="net-detail">
+                <span class="detail-label">Chain ID</span>
+                <code>{{ web3.currentNetwork.chainId }}</code>
+              </div>
+              <div class="net-detail">
+                <span class="detail-label">Moneda</span>
+                <span>{{ web3.currentNetwork.nativeCurrency.symbol }}</span>
+              </div>
+              <div class="net-detail">
+                <span class="detail-label">Explorer</span>
+                <a [href]="web3.currentNetwork.blockExplorerUrls[0]" target="_blank" class="explorer-link">
+                  Ver explorador ↗
+                </a>
+              </div>
+            </div>
+          } @else {
+            <div class="unknown-network">
+              <span>⚠️</span>
+              <p>Red no reconocida (Chain ID: {{ web3.chainId() }})</p>
+            </div>
+          }
+        }
+
+        <!-- Inline network picker -->
+        @if (showNetworkPicker()) {
+          <div class="network-picker">
+            @for (network of networks; track network.chainId) {
+              <button
+                class="net-option"
+                [class.active]="isActive(network)"
+                [disabled]="isSwitching(network)"
+                (click)="switchTo(network)"
+              >
+                <span class="net-opt-icon">{{ getNetworkIcon(network.chainId) }}</span>
+                <span class="net-opt-info">
+                  <span class="net-opt-name">{{ network.chainName }}</span>
+                  <span class="net-opt-symbol">{{ network.nativeCurrency.symbol }}</span>
+                </span>
+                @if (isActive(network)) {
+                  <span class="net-opt-check">✓</span>
+                } @else if (isSwitching(network)) {
+                  <span class="spinner-sm"></span>
+                }
+              </button>
+            }
+          </div>
+          @if (web3.errorMessage()) {
+            <div class="alert" [class]="web3.errorType() ?? 'error'" style="margin-top:0.75rem">
+              <span>{{ web3.errorType() === 'warning' ? '⚠️' : '❌' }}</span>
+              {{ web3.errorMessage() }}
+              <button class="alert-close" (click)="web3.clearError()">✕</button>
+            </div>
+          }
+        }
+      </div>
+
+      <!-- Quick Actions -->
+      <div class="card actions-card">
+        <div class="card-header">
+          <span class="card-icon">⚡</span>
+          <h3>Acciones rápidas</h3>
+        </div>
+        <div class="quick-actions">
+          <a routerLink="/send" class="action-btn">
+            <span class="action-icon">💸</span>
+            <span class="action-label">Enviar</span>
+            <span class="action-desc">Transferir fondos</span>
+          </a>
+          <a routerLink="/history" class="action-btn">
+            <span class="action-icon">📜</span>
+            <span class="action-label">Historial</span>
+            <span class="action-desc">Ver transacciones</span>
+          </a>
+          <a routerLink="/networks" class="action-btn">
+            <span class="action-icon">🔄</span>
+            <span class="action-label">Redes</span>
+            <span class="action-desc">Gestionar redes</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- Recent Transactions -->
+      <div class="card recent-card">
+        <div class="card-header">
+          <span class="card-icon">📊</span>
+          <h3>Últimas transacciones</h3>
+          <a routerLink="/history" class="view-all">Ver todas →</a>
+        </div>
+        @if (web3.transactions().length === 0) {
+          <div class="empty-state">
+            <span>📭</span>
+            <p>No hay transacciones recientes</p>
+            <a routerLink="/history" class="btn-secondary small">Cargar historial</a>
+          </div>
+        } @else {
+          <div class="tx-list">
+            @for (tx of web3.transactions().slice(0, 3); track tx.hash) {
+              <div class="tx-item">
+                <div class="tx-direction" [class.outgoing]="tx.from.toLowerCase() === web3.account()?.toLowerCase()">
+                  {{ tx.from.toLowerCase() === web3.account()?.toLowerCase() ? '↗' : '↙' }}
+                </div>
+                <div class="tx-info">
+                  <code class="tx-hash-short">{{ tx.hash.slice(0, 10) }}...{{ tx.hash.slice(-6) }}</code>
+                  <span class="tx-date">{{ tx.timestamp | date:'short' }}</span>
+                </div>
+                <div class="tx-right">
+                  <span class="tx-val">{{ tx.value }} {{ web3.currentNetwork?.nativeCurrency?.symbol ?? 'ETH' }}</span>
+                  <span class="tx-status" [class]="tx.status">{{ tx.status }}</span>
+                </div>
+              </div>
+            }
+          </div>
+        }
+      </div>
+    </div>
+  }
+</div>

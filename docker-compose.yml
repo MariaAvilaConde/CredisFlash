@@ -1,0 +1,38 @@
+version: '3.9'
+
+services:
+  crediflash:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+    container_name: crediflash-app
+    ports:
+      - "80:80"
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    labels:
+      - "com.crediflash.description=CrediFlash Web3 DApp"
+      - "com.crediflash.version=1.0.0"
+
+  # Optional: Nginx reverse proxy for HTTPS (uncomment for production with SSL)
+  # nginx-proxy:
+  #   image: nginxproxy/nginx-proxy:alpine
+  #   ports:
+  #     - "443:443"
+  #   volumes:
+  #     - /var/run/docker.sock:/tmp/docker.sock:ro
+  #     - ./certs:/etc/nginx/certs
+  #   depends_on:
+  #     - crediflash
+
+networks:
+  default:
+    name: crediflash-network

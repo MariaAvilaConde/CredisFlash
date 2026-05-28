@@ -1,0 +1,344 @@
+<!-- ===== HERO SECTION ===== -->
+<section class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-content">
+    <div class="hero-badge">
+      <span class="badge-dot"></span>
+      Web3 · DApp · MetaMask
+    </div>
+    <h1 class="hero-title">
+      <span class="gradient-text">CrediFlash</span>
+    </h1>
+    <p class="hero-subtitle">
+      La plataforma descentralizada para gestionar transacciones blockchain<br />
+      con soporte multi-red y autenticación Web3.
+    </p>
+    <div class="hero-actions">
+      <button class="btn-primary" (click)="openWalletModal()">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        Conectar Wallet
+      </button>
+      <a href="#features" class="btn-secondary">Ver características</a>
+    </div>
+    <div class="hero-stats">
+      <div class="stat">
+        <span class="stat-value">3+</span>
+        <span class="stat-label">Redes soportadas</span>
+      </div>
+      <div class="stat-divider"></div>
+      <div class="stat">
+        <span class="stat-value">Web3</span>
+        <span class="stat-label">Login seguro</span>
+      </div>
+      <div class="stat-divider"></div>
+      <div class="stat">
+        <span class="stat-value">100%</span>
+        <span class="stat-label">Descentralizado</span>
+      </div>
+    </div>
+  </div>
+  <div class="hero-visual">
+    <div class="metamask-card">
+      <div class="mm-icon">🦊</div>
+      <div class="mm-info">
+        <span class="mm-title">MetaMask</span>
+        <span class="mm-sub">Conecta tu wallet</span>
+      </div>
+      <div class="mm-status connected">● Live</div>
+    </div>
+    <div class="network-pills">
+      <span class="net-pill sepolia">Sepolia</span>
+      <span class="net-pill hoodi">Hoodi</span>
+      <span class="net-pill zksys">zkSYS</span>
+      <span class="net-pill eth">Ethereum</span>
+    </div>
+    <div class="tx-preview">
+      <div class="tx-row">
+        <span class="tx-icon">↗</span>
+        <div class="tx-details">
+          <span class="tx-hash">0x4f3a...b12c</span>
+          <span class="tx-time">hace 2 min</span>
+        </div>
+        <span class="tx-amount success">+0.05 ETH</span>
+      </div>
+      <div class="tx-row">
+        <span class="tx-icon">↙</span>
+        <div class="tx-details">
+          <span class="tx-hash">0x9e1d...a44f</span>
+          <span class="tx-time">hace 15 min</span>
+        </div>
+        <span class="tx-amount">-0.12 ETH</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== DESCRIPCIÓN ===== -->
+<section class="section" id="description">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-tag">01 · Descripción</span>
+      <h2>¿Qué es CrediFlash?</h2>
+    </div>
+    <div class="description-grid">
+      <div class="desc-card main-desc">
+        <p>
+          <strong>CrediFlash</strong> es una aplicación descentralizada (DApp) construida sobre Angular 21
+          que permite a los usuarios interactuar con la blockchain de Ethereum y redes compatibles
+          directamente desde el navegador, usando MetaMask como proveedor de identidad Web3.
+        </p>
+        <p>
+          La plataforma elimina intermediarios al permitir transacciones peer-to-peer verificables
+          en la blockchain, con historial inmutable y transparente según la red conectada.
+        </p>
+      </div>
+      <div class="desc-highlights">
+        <div class="highlight-item">
+          <div class="hi-icon">🔐</div>
+          <div>
+            <strong>Sin contraseñas</strong>
+            <p>Autenticación mediante firma criptográfica con tu wallet</p>
+          </div>
+        </div>
+        <div class="highlight-item">
+          <div class="hi-icon">⛓️</div>
+          <div>
+            <strong>Multi-chain</strong>
+            <p>Soporte para Sepolia, Hoodi, zkSYS y Ethereum Mainnet</p>
+          </div>
+        </div>
+        <div class="highlight-item">
+          <div class="hi-icon">📊</div>
+          <div>
+            <strong>Historial real</strong>
+            <p>Transacciones consultadas directamente desde la blockchain</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== OBJETIVOS ===== -->
+<section class="section alt-bg" id="objectives">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-tag">02 · Objetivos</span>
+      <h2>Objetivos del Proyecto</h2>
+    </div>
+    <div class="objectives-grid">
+      <div class="obj-card">
+        <div class="obj-number">01</div>
+        <h3>Democratizar el acceso Web3</h3>
+        <p>Proporcionar una interfaz intuitiva que permita a cualquier usuario interactuar con blockchain sin conocimientos técnicos avanzados.</p>
+      </div>
+      <div class="obj-card">
+        <div class="obj-number">02</div>
+        <h3>Transacciones seguras</h3>
+        <p>Implementar un flujo de transacciones address-to-address con confirmación en blockchain y verificación en tiempo real.</p>
+      </div>
+      <div class="obj-card">
+        <div class="obj-number">03</div>
+        <h3>Gestión multi-red</h3>
+        <p>Facilitar el cambio entre redes de prueba y producción, añadiendo automáticamente redes no configuradas en MetaMask.</p>
+      </div>
+      <div class="obj-card">
+        <div class="obj-number">04</div>
+        <h3>Despliegue cloud</h3>
+        <p>Containerizar la aplicación con Docker para un despliegue reproducible y escalable en cualquier entorno cloud.</p>
+      </div>
+      <div class="obj-card">
+        <div class="obj-number">05</div>
+        <h3>Transparencia total</h3>
+        <p>Mostrar el historial de transacciones consultado directamente desde la blockchain, sin depender de almacenamiento local.</p>
+      </div>
+      <div class="obj-card">
+        <div class="obj-number">06</div>
+        <h3>Experiencia moderna</h3>
+        <p>Ofrecer una UI/UX de alta calidad con Angular 21 y Signals para una experiencia reactiva y fluida.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== BENEFICIOS ===== -->
+<section class="section" id="benefits">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-tag">03 · Beneficios</span>
+      <h2>¿Por qué usar CrediFlash?</h2>
+    </div>
+    <div class="benefits-list">
+      <div class="benefit-row">
+        <div class="benefit-icon">🚀</div>
+        <div class="benefit-content">
+          <h3>Velocidad y eficiencia</h3>
+          <p>Transacciones procesadas directamente en la blockchain sin intermediarios, reduciendo tiempos y costos operativos.</p>
+        </div>
+        <div class="benefit-badge">Rápido</div>
+      </div>
+      <div class="benefit-row">
+        <div class="benefit-icon">🛡️</div>
+        <div class="benefit-content">
+          <h3>Seguridad criptográfica</h3>
+          <p>Cada transacción está firmada con tu clave privada. Nadie puede operar en tu nombre sin tu autorización explícita.</p>
+        </div>
+        <div class="benefit-badge">Seguro</div>
+      </div>
+      <div class="benefit-row">
+        <div class="benefit-icon">🌐</div>
+        <div class="benefit-content">
+          <h3>Acceso global</h3>
+          <p>Disponible desde cualquier parte del mundo, sin restricciones geográficas ni dependencia de bancos tradicionales.</p>
+        </div>
+        <div class="benefit-badge">Global</div>
+      </div>
+      <div class="benefit-row">
+        <div class="benefit-icon">🔍</div>
+        <div class="benefit-content">
+          <h3>Transparencia verificable</h3>
+          <p>Cada transacción queda registrada en la blockchain y puede ser verificada por cualquier persona en el explorador de bloques.</p>
+        </div>
+        <div class="benefit-badge">Transparente</div>
+      </div>
+      <div class="benefit-row">
+        <div class="benefit-icon">💡</div>
+        <div class="benefit-content">
+          <h3>Sin custodia</h3>
+          <p>Tus fondos permanecen siempre bajo tu control. CrediFlash nunca tiene acceso a tus claves privadas.</p>
+        </div>
+        <div class="benefit-badge">Non-custodial</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== CARACTERÍSTICAS ===== -->
+<section class="section alt-bg" id="features">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-tag">04 · Características</span>
+      <h2>Funcionalidades principales</h2>
+    </div>
+    <div class="features-grid">
+      <div class="feature-card featured">
+        <div class="feat-icon">🦊</div>
+        <h3>Login Web3 con MetaMask</h3>
+        <p>Autenticación descentralizada mediante MetaMask. Sin usuarios, sin contraseñas, sin servidores de autenticación.</p>
+        <ul class="feat-list">
+          <li>Conexión con un clic</li>
+          <li>Detección automática de wallet</li>
+          <li>Escucha cambios de cuenta</li>
+        </ul>
+      </div>
+      <div class="feature-card">
+        <div class="feat-icon">🔄</div>
+        <h3>Cambio de red</h3>
+        <p>Cambia entre Sepolia, Hoodi, zkSYS y Ethereum. Si la red no existe en MetaMask, se añade automáticamente.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feat-icon">🗑️</div>
+        <h3>Gestión de redes</h3>
+        <p>Desconecta redes ya añadidas con un solo clic. Control total sobre las redes conectadas a tu wallet.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feat-icon">📜</div>
+        <h3>Historial blockchain</h3>
+        <p>Consulta tu historial de transacciones directamente desde la blockchain según la red activa. Sin localStorage.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feat-icon">💸</div>
+        <h3>Envío de transacciones</h3>
+        <p>Envía ETH/tokens de address a address con confirmación en tiempo real y enlace al explorador de bloques.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feat-icon">🔗</div>
+        <h3>Explorador de bloques</h3>
+        <p>Cada transacción incluye un enlace directo al explorador de bloques correspondiente a la red activa.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feat-icon">🐳</div>
+        <h3>Docker & Cloud</h3>
+        <p>Containerizado con Docker y listo para desplegar en cualquier plataforma cloud (Railway, Render, AWS, etc.).</p>
+      </div>
+      <div class="feature-card">
+        <div class="feat-icon">⚡</div>
+        <h3>Angular 21 + Signals</h3>
+        <p>Construido con la última versión de Angular usando Signals para reactividad de alto rendimiento.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== DESARROLLADOR ===== -->
+<section class="section" id="developer">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-tag">05 · Desarrollador</span>
+      <h2>Sobre el Desarrollador</h2>
+    </div>
+    <div class="dev-card">
+      <div class="dev-avatar-wrapper">
+        <div class="dev-avatar">
+          <img
+            src="https://avatars.githubusercontent.com/u/583231?v=4"
+            alt="Foto del desarrollador"
+            class="dev-photo"
+            onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'"
+          />
+          <div class="dev-avatar-fallback" style="display:none">
+            <span>👨‍💻</span>
+          </div>
+        </div>
+        <div class="dev-badge-ring"></div>
+      </div>
+      <div class="dev-info">
+        <h3 class="dev-name">Desarrollador Full Stack Web3</h3>
+        <p class="dev-role">Angular · Blockchain · Smart Contracts · DevOps</p>
+        <p class="dev-bio">
+          Apasionado por las tecnologías descentralizadas y el desarrollo de aplicaciones Web3.
+          Especializado en la integración de blockchain con frameworks modernos de frontend,
+          creando experiencias de usuario fluidas en el ecosistema DeFi.
+        </p>
+        <div class="dev-skills">
+          <span class="skill-tag">Angular</span>
+          <span class="skill-tag">TypeScript</span>
+          <span class="skill-tag">Ethers.js</span>
+          <span class="skill-tag">Solidity</span>
+          <span class="skill-tag">Docker</span>
+          <span class="skill-tag">Web3</span>
+          <span class="skill-tag">MetaMask</span>
+        </div>
+        <div class="dev-links">
+          <a href="https://github.com" target="_blank" class="dev-link">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
+            GitHub
+          </a>
+          <a href="https://linkedin.com" target="_blank" class="dev-link">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+            LinkedIn
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== CTA FINAL ===== -->
+<section class="cta-section">
+  <div class="container">
+    <h2>¿Listo para empezar?</h2>
+    <p>Conecta tu wallet MetaMask y comienza a usar CrediFlash ahora mismo.</p>
+    @if (web3.isConnected()) {
+      <a routerLink="/dashboard" class="btn-primary large">
+        Ir al Dashboard
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+      </a>
+    } @else {
+      <button class="btn-primary large" (click)="openWalletModal()">
+        Conectar Wallet
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      </button>
+    }
+  </div>
+</section>

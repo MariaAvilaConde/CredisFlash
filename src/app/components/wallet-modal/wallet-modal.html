@@ -1,0 +1,198 @@
+<div class="wallet-modal-backdrop" (click)="onBackdropClick($event)" role="dialog" aria-modal="true" aria-label="Conectar wallet">
+  <div class="wallet-modal-panel">
+
+    <!-- Header -->
+    <div class="wm-header">
+      <div class="wm-title-group">
+        <div class="wm-icon">🔐</div>
+        <div>
+          <h2>Conectar Wallet</h2>
+          <p>Elige tu proveedor Web3 para continuar</p>
+        </div>
+      </div>
+      <button class="wm-close" (click)="close.emit()" aria-label="Cerrar">✕</button>
+    </div>
+
+    <!-- Error / warning -->
+    @if (web3.errorMessage()) {
+      <div class="wm-alert" [class]="web3.errorType() ?? 'error'">
+        <span>{{ web3.errorType() === 'warning' ? '⚠️' : '❌' }}</span>
+        <span>{{ web3.errorMessage() }}</span>
+        <button (click)="web3.clearError()">✕</button>
+      </div>
+    }
+
+    <!-- No wallets detected banner -->
+    @if (detectedCount === 0) {
+      <div class="wm-no-wallet-banner">
+        <span class="wm-nw-icon">🦊</span>
+        <div>
+          <strong>No se detectó ninguna wallet</strong>
+          <p>Instala MetaMask o Pali Wallet para continuar. Después recarga la página.</p>
+        </div>
+      </div>
+    }
+
+    <!-- ── Principales ── -->
+    <div class="wm-section-label">⭐ Principales</div>
+    <div class="wm-featured">
+      @for (wallet of wallets; track wallet.id) {
+        @if (wallet.isPopular) {
+          <div class="wm-card"
+               [class.detected]="isDetected(wallet.id)"
+               [class.connecting]="connecting() === wallet.id">
+
+            <!-- Icon -->
+            <div class="wm-icon-wrap">
+              @switch (wallet.icon) {
+                @case ('metamask') {
+                  <svg class="wm-svg" viewBox="0 0 318.6 318.6" xmlns="http://www.w3.org/2000/svg">
+                    <polygon fill="#E2761B" stroke="#E2761B" points="274.1,35.5 174.6,109.4 193,65.8"/>
+                    <polygon fill="#E4761B" stroke="#E4761B" points="44.4,35.5 143.1,110.1 125.6,65.8"/>
+                    <polygon fill="#D7C1B3" stroke="#D7C1B3" points="238.3,206.8 211.8,247.4 268.5,263 284.8,207.7"/>
+                    <polygon fill="#D7C1B3" stroke="#D7C1B3" points="33.9,207.7 50.1,263 106.8,247.4 80.3,206.8"/>
+                    <polygon fill="#D7C1B3" stroke="#D7C1B3" points="103.6,138.2 87.8,162.1 144.1,164.6 142.1,104.1"/>
+                    <polygon fill="#D7C1B3" stroke="#D7C1B3" points="214.9,138.2 175.9,103.4 174.6,164.6 230.8,162.1"/>
+                    <polygon fill="#233447" stroke="#233447" points="106.8,247.4 140.6,230.9 111.4,208.1"/>
+                    <polygon fill="#233447" stroke="#233447" points="177.9,230.9 211.8,247.4 207.1,208.1"/>
+                    <polygon fill="#CD6116" stroke="#CD6116" points="211.8,247.4 177.9,230.9 180.6,253 180.3,262.3"/>
+                    <polygon fill="#CD6116" stroke="#CD6116" points="106.8,247.4 138.3,262.3 138.1,253 140.6,230.9"/>
+                    <polygon fill="#E4751F" stroke="#E4751F" points="138.8,193.5 110.6,185.2 130.5,176.1"/>
+                    <polygon fill="#E4751F" stroke="#E4751F" points="179.7,193.5 187.9,176.1 208,185.2"/>
+                    <polygon fill="#F6851B" stroke="#F6851B" points="106.8,247.4 111.6,206.8 80.3,207.7"/>
+                    <polygon fill="#F6851B" stroke="#F6851B" points="207,206.8 211.8,247.4 238.3,207.7"/>
+                    <polygon fill="#F6851B" stroke="#F6851B" points="230.8,162.1 174.6,164.6 179.8,193.5 188,176.1 208.1,185.2"/>
+                    <polygon fill="#F6851B" stroke="#F6851B" points="110.6,185.2 130.7,176.1 138.8,193.5 144.1,164.6 87.8,162.1"/>
+                    <polygon fill="#C0AD9E" stroke="#C0AD9E" points="87.8,162.1 111.4,208.1 110.6,185.2"/>
+                    <polygon fill="#C0AD9E" stroke="#C0AD9E" points="208.1,185.2 207.1,208.1 230.8,162.1"/>
+                    <polygon fill="#C0AD9E" stroke="#C0AD9E" points="144.1,164.6 138.8,193.5 145.4,227.6 146.9,182.7"/>
+                    <polygon fill="#C0AD9E" stroke="#C0AD9E" points="174.6,164.6 171.9,182.6 173.1,227.6 179.8,193.5"/>
+                    <polygon fill="#161616" stroke="#161616" points="179.8,193.5 173.1,227.6 177.9,230.9 207.1,208.1 208.1,185.2"/>
+                    <polygon fill="#161616" stroke="#161616" points="110.6,185.2 111.4,208.1 140.6,230.9 145.4,227.6 138.8,193.5"/>
+                    <polygon fill="#763D16" stroke="#763D16" points="180.3,262.3 180.6,253 178.1,250.8 140.4,250.8 138.1,253 138.3,262.3 106.8,247.4 117.8,256.4 140.1,271.9 178.4,271.9 200.8,256.4 211.8,247.4"/>
+                    <polygon fill="#F6851B" stroke="#F6851B" points="177.9,230.9 173.1,227.6 145.4,227.6 140.6,230.9 138.1,253 140.4,250.8 178.1,250.8 180.6,253"/>
+                    <polygon fill="#763D16" stroke="#763D16" points="278.3,114.2 286.8,73.4 274.1,35.5 177.9,106.9 214.9,138.2 267.2,153.5 278.9,140 273.8,136.4 281.8,129.1 275.6,124.3 283.6,118.2"/>
+                    <polygon fill="#763D16" stroke="#763D16" points="31.8,73.4 40.3,114.2 34.9,118.2 42.9,124.3 36.8,129.1 44.8,136.4 39.7,140 51.3,153.5 103.6,138.2 140.6,106.9 44.4,35.5"/>
+                    <polygon fill="#F6851B" stroke="#F6851B" points="267.2,153.5 214.9,138.2 230.8,162.1 207.1,208.1 238.3,207.7 284.8,207.7"/>
+                    <polygon fill="#F6851B" stroke="#F6851B" points="103.6,138.2 51.3,153.5 33.9,207.7 80.3,207.7 111.4,208.1 87.8,162.1"/>
+                    <polygon fill="#F6851B" stroke="#F6851B" points="174.6,164.6 177.9,106.9 193.2,65.8 125.6,65.8 140.6,106.9 144.1,164.6 145.3,182.8 145.4,227.6 173.1,227.6 173.3,182.8"/>
+                  </svg>
+                }
+                @case ('pali') {
+                  <svg class="wm-svg" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                      <linearGradient id="paliG" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" style="stop-color:#0066FF"/>
+                        <stop offset="100%" style="stop-color:#00CCFF"/>
+                      </linearGradient>
+                    </defs>
+                    <circle cx="50" cy="50" r="48" fill="url(#paliG)"/>
+                    <text x="50" y="63" text-anchor="middle" font-size="42" font-weight="bold" fill="white" font-family="Arial,sans-serif">P</text>
+                  </svg>
+                }
+                @default { <div class="wm-fallback">🌐</div> }
+              }
+            </div>
+
+            <!-- Info -->
+            <div class="wm-info">
+              <div class="wm-name-row">
+                <span class="wm-name">{{ wallet.name }}</span>
+                @if (isDetected(wallet.id)) {
+                  <span class="wm-detected-badge">✓ Detectada</span>
+                }
+              </div>
+              <span class="wm-desc">{{ wallet.description }}</span>
+              <!-- Pali extra note when not detected -->
+              @if (wallet.id === 'pali' && !isDetected(wallet.id)) {
+                <span class="wm-note">Soporta EVM + UTXO/Syscoin nativo</span>
+              }
+            </div>
+
+            <!-- Action -->
+            <div>
+              @if (isDetected(wallet.id)) {
+                <button class="wm-btn-connect" (click)="connect(wallet)" [disabled]="connecting() !== null">
+                  @if (connecting() === wallet.id) {
+                    <span class="wm-spinner"></span> Conectando...
+                  } @else {
+                    Conectar →
+                  }
+                </button>
+              } @else {
+                <button class="wm-btn-install" (click)="openInstall(wallet.installUrl)">
+                  Instalar ↗
+                </button>
+              }
+            </div>
+          </div>
+        }
+      }
+    </div>
+
+    <!-- ── Otras wallets ── -->
+    <div class="wm-section-label">Otras wallets</div>
+    <div class="wm-list">
+      @for (wallet of wallets; track wallet.id) {
+        @if (!wallet.isPopular) {
+          <div class="wm-row" [class.detected]="isDetected(wallet.id)">
+            <div class="wm-icon-sm">
+              @switch (wallet.icon) {
+                @case ('coinbase') {
+                  <svg class="wm-svg-sm" viewBox="0 0 100 100"><circle cx="50" cy="50" r="48" fill="#0052FF"/><rect x="28" y="28" width="44" height="44" rx="8" fill="white"/><circle cx="50" cy="50" r="12" fill="#0052FF"/></svg>
+                }
+                @case ('brave') {
+                  <svg class="wm-svg-sm" viewBox="0 0 100 100"><circle cx="50" cy="50" r="48" fill="#FF5500"/><polygon points="50,18 72,35 65,65 50,75 35,65 28,35" fill="white" opacity="0.9"/><polygon points="50,30 62,42 58,60 50,66 42,60 38,42" fill="#FF5500"/></svg>
+                }
+                @case ('trust') {
+                  <svg class="wm-svg-sm" viewBox="0 0 100 100"><circle cx="50" cy="50" r="48" fill="#3375BB"/><path d="M50 20 L72 30 L72 55 C72 68 62 78 50 82 C38 78 28 68 28 55 L28 30 Z" fill="white" opacity="0.9"/><path d="M42 50 L47 56 L60 42" stroke="#3375BB" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                }
+                @case ('rabby') {
+                  <svg class="wm-svg-sm" viewBox="0 0 100 100"><circle cx="50" cy="50" r="48" fill="#7B4FFF"/><ellipse cx="50" cy="52" rx="22" ry="18" fill="white" opacity="0.9"/><circle cx="42" cy="46" r="4" fill="#7B4FFF"/><circle cx="58" cy="46" r="4" fill="#7B4FFF"/></svg>
+                }
+                @default { <div class="wm-fallback-sm">🌐</div> }
+              }
+            </div>
+            <div class="wm-row-info">
+              <span class="wm-name">{{ wallet.name }}</span>
+              @if (isDetected(wallet.id)) {
+                <span class="wm-detected-sm">✓</span>
+              }
+            </div>
+            @if (isDetected(wallet.id)) {
+              <button class="wm-btn-connect-sm" (click)="connect(wallet)" [disabled]="connecting() !== null">
+                @if (connecting() === wallet.id) { <span class="wm-spinner-sm"></span> } @else { Conectar }
+              </button>
+            } @else {
+              <button class="wm-btn-install-sm" (click)="openInstall(wallet.installUrl)">Instalar ↗</button>
+            }
+          </div>
+        }
+      }
+    </div>
+
+    <!-- Pali EVM info box -->
+    <div class="wm-pali-info">
+      <div class="wm-pali-info-header">
+        <svg class="wm-svg-sm" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" style="width:24px;height:24px;flex-shrink:0">
+          <defs><linearGradient id="paliG2" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#0066FF"/><stop offset="100%" style="stop-color:#00CCFF"/></linearGradient></defs>
+          <circle cx="50" cy="50" r="48" fill="url(#paliG2)"/>
+          <text x="50" y="63" text-anchor="middle" font-size="42" font-weight="bold" fill="white" font-family="Arial,sans-serif">P</text>
+        </svg>
+        <strong>¿Cómo usar Pali Wallet con esta DApp?</strong>
+      </div>
+      <ol>
+        <li>Instala <a href="https://paliwallet.com/" target="_blank" rel="noopener">Pali Wallet</a> desde la Chrome Web Store.</li>
+        <li>Abre Pali y ve a <strong>Configuración → Red</strong> y asegúrate de estar en modo <strong>EVM</strong> (no UTXO).</li>
+        <li>Recarga esta página — Pali aparecerá como "Detectada" arriba.</li>
+        <li>Haz clic en <strong>Conectar</strong> y acepta en el popup de Pali.</li>
+      </ol>
+    </div>
+
+    <!-- Footer -->
+    <div class="wm-footer">
+      🔒 Tu clave privada nunca sale de tu dispositivo
+    </div>
+
+  </div>
+</div>
