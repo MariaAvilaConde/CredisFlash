@@ -23,15 +23,15 @@ export const SUPPORTED_NETWORKS: NetworkConfig[] = [
     nativeCurrency: { name: 'Sepolia ETH', symbol: 'ETH', decimals: 18 },
     rpcUrls: ['https://rpc.sepolia.org'],
     blockExplorerUrls: ['https://sepolia.etherscan.io'],
-    explorerApiUrl: 'https://api-sepolia.etherscan.io/api',
+    // Etherscan V2 requires API key — omit to use RPC scan
   },
   {
     chainId: '0x88bb0',
     chainName: 'Hoodi Testnet',
     nativeCurrency: { name: 'Hoodi ETH', symbol: 'ETH', decimals: 18 },
     rpcUrls: ['https://rpc.hoodi.ethpandaops.io'],
-    blockExplorerUrls: ['https://hoodi.ethpandaops.io'],
-    explorerApiUrl: 'https://explorer.hoodi.ethpandaops.io/api',
+    blockExplorerUrls: ['https://hoodi.etherscan.io'],
+    // Etherscan V2 requires API key — omit to use RPC scan
   },
   {
     chainId: '0x1389',
@@ -39,7 +39,6 @@ export const SUPPORTED_NETWORKS: NetworkConfig[] = [
     nativeCurrency: { name: 'SYS', symbol: 'SYS', decimals: 18 },
     rpcUrls: ['https://rpc.zkSYS.syscoin.org'],
     blockExplorerUrls: ['https://explorer.zkSYS.syscoin.org'],
-    explorerApiUrl: 'https://explorer.zkSYS.syscoin.org/api',
   },
   {
     chainId: '0x13882',
@@ -79,7 +78,7 @@ export const SUPPORTED_NETWORKS: NetworkConfig[] = [
     nativeCurrency: { name: 'ETH', symbol: 'ETH', decimals: 18 },
     rpcUrls: ['https://sepolia.optimism.io'],
     blockExplorerUrls: ['https://sepolia-optimism.etherscan.io'],
-    explorerApiUrl: 'https://api-sepolia-optimistic.etherscan.io/api',
+    // Etherscan V2 requires API key — omit to use RPC scan
   },
   // ── Mainnets ──────────────────────────────────────────────────────────────
   {
@@ -88,7 +87,7 @@ export const SUPPORTED_NETWORKS: NetworkConfig[] = [
     nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 },
     rpcUrls: ['https://cloudflare-eth.com'],
     blockExplorerUrls: ['https://etherscan.io'],
-    explorerApiUrl: 'https://api.etherscan.io/api',
+    // Etherscan V2 requires API key — omit to use RPC scan
   },
   {
     chainId: '0x89',
@@ -120,7 +119,7 @@ export const SUPPORTED_NETWORKS: NetworkConfig[] = [
     nativeCurrency: { name: 'ETH', symbol: 'ETH', decimals: 18 },
     rpcUrls: ['https://mainnet.optimism.io'],
     blockExplorerUrls: ['https://optimistic.etherscan.io'],
-    explorerApiUrl: 'https://api-optimistic.etherscan.io/api',
+    // Etherscan V2 requires API key — omit to use RPC scan
   },
 ];
 

@@ -191,8 +191,8 @@
                 <button class="btn-remove" (click)="deleteCustom(network)" title="Eliminar red custom">
                   🗑️ Eliminar
                 </button>
-              } @else {
-                <button class="btn-remove" (click)="remove(network)" [disabled]="web3.isLoading()" title="Desconectar red">
+              } @else if (isActive(network)) {
+                <button class="btn-remove" (click)="remove(network)" [disabled]="web3.isLoading()" title="Cambiar a otra red">
                   🔌 Desconectar
                 </button>
               }

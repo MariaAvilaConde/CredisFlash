@@ -1,0 +1,28 @@
+@if (confirmService.visible()) {
+  <div class="confirm-backdrop" (click)="onBackdropClick($event)" role="dialog" aria-modal="true">
+    <div class="confirm-dialog confirm-dialog--{{ confirmService.options().type ?? 'info' }}">
+
+      <div class="confirm-icon">
+        @switch (confirmService.options().type) {
+          @case ('danger')  { <span>🗑️</span> }
+          @case ('warning') { <span>⚠️</span> }
+          @default          { <span>❓</span> }
+        }
+      </div>
+
+      <h3 class="confirm-title">{{ confirmService.options().title }}</h3>
+      <p class="confirm-message">{{ confirmService.options().message }}</p>
+
+      <div class="confirm-actions">
+        <button class="btn-cancel" (click)="confirmService.cancel()">
+          {{ confirmService.options().cancelLabel ?? 'Cancelar' }}
+        </button>
+        <button class="btn-confirm btn-confirm--{{ confirmService.options().type ?? 'info' }}"
+                (click)="confirmService.confirm()">
+          {{ confirmService.options().confirmLabel ?? 'Confirmar' }}
+        </button>
+      </div>
+
+    </div>
+  </div>
+}

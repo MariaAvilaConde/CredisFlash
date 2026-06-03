@@ -2,6 +2,8 @@ import { Component, inject, signal, computed } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Web3Service } from '../../services/web3.service';
 import { UiService } from '../../services/ui.service';
+import { ToastService } from '../../services/toast.service';
+import { ConfirmService } from '../../services/confirm.service';
 import { NetworkConfig, SUPPORTED_NETWORKS } from '../../models/network.model';
 
 @Component({
@@ -14,6 +16,8 @@ import { NetworkConfig, SUPPORTED_NETWORKS } from '../../models/network.model';
 export class NetworkManagerComponent {
   readonly web3 = inject(Web3Service);
   readonly ui = inject(UiService);
+  readonly toast = inject(ToastService);
+  readonly confirm = inject(ConfirmService);
 
   // Tab: 'all' | 'testnet' | 'mainnet' | 'custom'
   readonly activeTab = signal<'all' | 'testnet' | 'mainnet' | 'custom'>('all');
@@ -76,19 +80,45 @@ export class NetworkManagerComponent {
   }
 
   async switchTo(network: NetworkConfig): Promise<void> {
+    this.toast.info(`Cambiando a ${network.chainName}…`);
     await this.web3.switchNetwork(network);
+    if (!this.web3.errorMessage()) {
+      this.toast.success(`Conectado a ${network.chainName}`);
+    } else {
+      this.toast.error(this.web3.errorMessage()!);
+    }
   }
 
   async remove(network: NetworkConfig): Promise<void> {
-    if (confirm(`¿Desconectar la red "${network.chainName}"?\nEsto revocará los permisos de la wallet.`)) {
+    if (!this.isActive(network)) return;
+    const ok = await this.confirm.open({
+      title: 'Desconectar red',
+      message: `¿Cambiar de red y desconectarte de "${network.chainName}"? Tu wallet seguirá conectada.`,
+      confirmLabel: 'Desconectar',
+      cancelLabel: 'Cancelar',
+      type: 'warning',
+    });
+    if (ok) {
       await this.web3.removeNetwork(network);
+      if (!this.web3.errorMessage()) {
+        this.toast.info(`Desconectado de ${network.chainName}`);
+      }
     }
   }
 
   deleteCustom(network: NetworkConfig): void {
-    if (confirm(`¿Eliminar la red personalizada "${network.chainName}" de la lista?`)) {
-      this.web3.deleteCustomNetwork(network.chainId);
-    }
+    this.confirm.open({
+      title: 'Eliminar red',
+      message: `¿Eliminar la red personalizada "${network.chainName}" de la lista?`,
+      confirmLabel: 'Eliminar',
+      cancelLabel: 'Cancelar',
+      type: 'danger',
+    }).then((ok) => {
+      if (ok) {
+        this.web3.deleteCustomNetwork(network.chainId);
+        this.toast.warning(`Red "${network.chainName}" eliminada`);
+      }
+    });
   }
 
   async connect(): Promise<void> {
@@ -115,14 +145,12 @@ export class NetworkManagerComponent {
     this.formError.set(null);
     const f = this.form();
 
-    // Validate
     if (!f.chainId?.trim()) { this.formError.set('El Chain ID es obligatorio (ej: 0x1234)'); return; }
     if (!f.chainId.startsWith('0x')) { this.formError.set('El Chain ID debe empezar con 0x'); return; }
     if (!f.chainName?.trim()) { this.formError.set('El nombre de la red es obligatorio'); return; }
     if (!f.nativeCurrency?.symbol?.trim()) { this.formError.set('El símbolo de la moneda es obligatorio'); return; }
     if (!f.rpcUrls?.[0]?.trim()) { this.formError.set('La URL RPC es obligatoria'); return; }
 
-    // Check duplicate
     const exists = this.web3.allNetworks().some((n) => n.chainId === f.chainId);
     if (exists) { this.formError.set('Ya existe una red con ese Chain ID'); return; }
 
@@ -141,9 +169,9 @@ export class NetworkManagerComponent {
     };
 
     await this.web3.addCustomNetwork(newNet);
+    this.toast.success(`Red "${newNet.chainName}" añadida y conectada`);
     this.showAddForm.set(false);
     this.activeTab.set('custom');
-    // Reset form
     this.form.set({ chainId: '', chainName: '', nativeCurrency: { name: '', symbol: '', decimals: 18 }, rpcUrls: [''], blockExplorerUrls: [''], explorerApiUrl: '' });
   }
 

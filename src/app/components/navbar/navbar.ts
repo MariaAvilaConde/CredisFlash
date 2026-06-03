@@ -2,6 +2,7 @@ import { Component, inject, signal } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { Web3Service } from '../../services/web3.service';
 import { UiService } from '../../services/ui.service';
+import { ToastService } from '../../services/toast.service';
 
 @Component({
   selector: 'app-navbar',
@@ -13,6 +14,7 @@ import { UiService } from '../../services/ui.service';
 export class NavbarComponent {
   readonly web3 = inject(Web3Service);
   readonly ui = inject(UiService);
+  readonly toast = inject(ToastService);
   readonly menuOpen = signal(false);
 
   toggleMenu(): void {
@@ -32,5 +34,6 @@ export class NavbarComponent {
 
   async disconnect(): Promise<void> {
     await this.web3.disconnectWallet();
+    this.toast.info('Wallet desconectada');
   }
 }

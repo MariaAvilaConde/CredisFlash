@@ -103,15 +103,12 @@ export const WALLET_CATALOG: WalletOption[] = [
 @Injectable({ providedIn: 'root' })
 export class Web3Service {
   private provider: BrowserProvider | null = null;
-  private rawProvider: any = null;       // the EIP-1193 object currently in use
+  private rawProvider: any = null;
   private providerChainId: string | null = null;
 
-  // ── EIP-6963 discovered providers ─────────────────────────────────────────
-  // Map rdns → EIP6963ProviderDetail
   private eip6963Providers = new Map<string, EIP6963ProviderDetail>();
   readonly discoveredWallets = signal<EIP6963ProviderDetail[]>([]);
 
-  // ── Signals ────────────────────────────────────────────────────────────────
   readonly account          = signal<string | null>(null);
   readonly chainId          = signal<string | null>(null);
   readonly balance          = signal<string>('0');
@@ -379,25 +376,16 @@ export class Web3Service {
   }
 
   async removeNetwork(network: NetworkConfig): Promise<void> {
-    const raw = this.rawProvider ?? window.ethereum;
-    if (!raw) return;
-    try {
-      this.isLoading.set(true);
-      this.clearError();
-      await raw.request({
-        method: 'wallet_revokePermissions',
-        params: [{ eth_accounts: {} }],
-      });
-      this.account.set(null);
-      this.chainId.set(null);
-      this.balance.set('0');
-      this.provider = null;
-      this.rawProvider = null;
-      this.providerChainId = null;
-    } catch (err: any) {
-      this.setError(err);
-    } finally {
-      this.isLoading.set(false);
+    // If this network is currently active, switch to the first available different network
+    if (this.chainId() === network.chainId) {
+      const fallback = this.allNetworks().find((n) => n.chainId !== network.chainId);
+      if (fallback) {
+        await this.switchNetwork(fallback);
+      }
+    }
+    // If it's a custom network, also remove it from the list
+    if (network.isCustom) {
+      this.deleteCustomNetwork(network.chainId);
     }
   }
 
@@ -416,6 +404,40 @@ export class Web3Service {
     return getCustomNetworks();
   }
 
+  // ── LocalStorage tx persistence ───────────────────────────────────────────
+  private localTxKey(address: string, chainId: string): string {
+    return `crediflash_txs_${address.toLowerCase()}_${chainId}`;
+  }
+
+  private saveLocalTx(tx: Transaction): void {
+    try {
+      const key = this.localTxKey(tx.from, tx.networkChainId);
+      const stored: Transaction[] = JSON.parse(localStorage.getItem(key) ?? '[]');
+      // Avoid duplicates
+      const updated = [tx, ...stored.filter((t) => t.hash !== tx.hash)].slice(0, 100);
+      localStorage.setItem(key, JSON.stringify(updated));
+    } catch { /* ignore storage errors */ }
+  }
+
+  private loadLocalTxs(address: string, chainId: string): Transaction[] {
+    try {
+      const key = this.localTxKey(address, chainId);
+      return JSON.parse(localStorage.getItem(key) ?? '[]');
+    } catch { return []; }
+  }
+
+  private mergeTxLists(local: Transaction[], remote: Transaction[]): Transaction[] {
+    const seen = new Set<string>();
+    const merged: Transaction[] = [];
+    for (const tx of [...remote, ...local]) {
+      if (!seen.has(tx.hash)) {
+        seen.add(tx.hash);
+        merged.push(tx);
+      }
+    }
+    return merged.sort((a, b) => b.timestamp - a.timestamp);
+  }
+
   // ── Transactions ───────────────────────────────────────────────────────────
   async sendTransaction(to: string, amountEth: string): Promise<string | null> {
     if (!this.account()) {
@@ -428,7 +450,7 @@ export class Web3Service {
       this.clearError();
       const p = this.getProvider();
       const signer = await p.getSigner();
-      const tx = await signer.sendTransaction({ to, value: ethers.parseEther(amountEth) });
+      const tx = await signer.sendTransaction({ to, value: ethers.parseEther(String(amountEth)) });
       const receipt = await tx.wait();
       const explorerUrl = `${this.explorerBaseUrl}/tx/${tx.hash}`;
       const newTx: Transaction = {
@@ -443,6 +465,7 @@ export class Web3Service {
         explorerUrl,
       };
       this.transactions.update((txs) => [newTx, ...txs]);
+      this.saveLocalTx(newTx);
       await this.refreshBalance();
       return tx.hash;
     } catch (err: any) {
@@ -456,15 +479,56 @@ export class Web3Service {
   async loadTransactionHistory(): Promise<void> {
     if (!this.account()) return;
     const address = this.account()!;
+    const chainId = this.chainId() ?? '';
     const network = this.currentNetwork;
     this.isLoading.set(true);
     this.clearError();
-    this.transactions.set([]);
+
+    // Show locally stored txs immediately while remote loads
+    const localTxs = this.loadLocalTxs(address, chainId);
+    if (localTxs.length > 0) {
+      this.transactions.set(localTxs);
+    } else {
+      this.transactions.set([]);
+    }
+
+    // Timeout: only abort if no results at all after 30 seconds
+    const timeout = setTimeout(() => {
+      if (this.isLoading()) {
+        this.isLoading.set(false);
+        if (this.transactions().length === 0) {
+          this.errorMessage.set('La carga tardó demasiado. Pulsa "Actualizar" para reintentar.');
+          this.errorType.set('warning');
+        }
+      }
+    }, 30_000);
+
     try {
       if (network?.explorerApiUrl) {
-        await this.loadHistoryViaApi(address, network);
+        try {
+          await this.loadHistoryViaApi(address, network);
+          // Merge API results with local txs
+          const apiTxs = this.transactions();
+          this.transactions.set(this.mergeTxLists(localTxs, apiTxs));
+        } catch (apiErr: any) {
+          console.warn('Explorer API failed, falling back to RPC scan:', apiErr?.message);
+          try {
+            await this.loadHistoryViaRpc(address);
+            const rpcTxs = this.transactions();
+            this.transactions.set(this.mergeTxLists(localTxs, rpcTxs));
+          } catch {
+            // Both failed — at least show local txs
+            this.transactions.set(localTxs);
+          }
+        }
       } else {
-        await this.loadHistoryViaRpc(address);
+        try {
+          await this.loadHistoryViaRpc(address);
+          const rpcTxs = this.transactions();
+          this.transactions.set(this.mergeTxLists(localTxs, rpcTxs));
+        } catch {
+          this.transactions.set(localTxs);
+        }
       }
     } catch (err: any) {
       const msg: string = err?.message ?? '';
@@ -476,6 +540,7 @@ export class Web3Service {
         this.errorType.set('error');
       }
     } finally {
+      clearTimeout(timeout);
       this.isLoading.set(false);
     }
   }
@@ -483,62 +548,134 @@ export class Web3Service {
   private async loadHistoryViaApi(address: string, network: NetworkConfig): Promise<void> {
     const base = network.explorerApiUrl!;
     const keyParam = network.explorerApiKey ? `&apikey=${network.explorerApiKey}` : '';
-    const url = `${base}?module=account&action=txlist&address=${address}&startblock=0&endblock=99999999&page=1&offset=25&sort=desc${keyParam}`;
-    const res = await fetch(url);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const data = await res.json();
-    if (data.status === '0' && data.message !== 'No transactions found') {
+
+    // Etherscan V2 uses a single endpoint with chainid param
+    const chainIdDecimal = parseInt(network.chainId, 16);
+    const chainParam = base.includes('/v2/') ? `&chainid=${chainIdDecimal}` : '';
+    const url = `${base}?module=account&action=txlist&address=${address}&startblock=0&endblock=99999999&page=1&offset=50&sort=desc${chainParam}${keyParam}`;
+
+    let data: any;
+    for (let attempt = 0; attempt < 2; attempt++) {
+      const res = await fetch(url);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      data = await res.json();
+
+      console.log(`[CredisFlash] Explorer API (attempt ${attempt + 1}):`, data.status, data.message, 'results:', Array.isArray(data.result) ? data.result.length : data.result);
+
+      const isRateLimit = data.status === '0' && (
+        String(data.result).toLowerCase().includes('rate') ||
+        String(data.message).toLowerCase().includes('rate')
+      );
+      if (isRateLimit && attempt === 0) {
+        await new Promise((r) => setTimeout(r, 1500));
+        continue;
+      }
+      break;
+    }
+
+    if (Array.isArray(data.result) && data.result.length > 0) {
+      const explorerBase = network.blockExplorerUrls[0];
+      this.transactions.set(
+        data.result.map((item: any) => ({
+          hash: item.hash,
+          from: item.from,
+          to: item.to,
+          value: parseFloat(ethers.formatEther(item.value ?? '0')).toFixed(6),
+          timestamp: parseInt(item.timeStamp, 10) * 1000,
+          blockNumber: parseInt(item.blockNumber, 10),
+          status: item.isError === '0' ? 'success' : 'failed',
+          networkChainId: this.chainId() ?? '',
+          explorerUrl: `${explorerBase}/tx/${item.hash}`,
+        }))
+      );
+      return;
+    }
+
+    if (data.message === 'No transactions found') {
       this.transactions.set([]);
       return;
     }
-    const explorerBase = network.blockExplorerUrls[0];
-    this.transactions.set(
-      (data.result ?? []).map((item: any) => ({
-        hash: item.hash,
-        from: item.from,
-        to: item.to,
-        value: parseFloat(ethers.formatEther(item.value ?? '0')).toFixed(6),
-        timestamp: parseInt(item.timeStamp, 10) * 1000,
-        blockNumber: parseInt(item.blockNumber, 10),
-        status: item.isError === '0' ? 'success' : 'failed',
-        networkChainId: this.chainId() ?? '',
-        explorerUrl: `${explorerBase}/tx/${item.hash}`,
-      }))
-    );
+
+    if (data.status === '0') {
+      throw new Error(`API error: ${data.message ?? 'unknown'}`);
+    }
+
+    this.transactions.set([]);
   }
 
   private async loadHistoryViaRpc(address: string): Promise<void> {
     const p = this.getProvider();
     const snapshotChainId = this.chainId();
     const currentBlock = await p.getBlockNumber();
-    const fromBlock = Math.max(0, currentBlock - 500);
+
+    const SCAN_BLOCKS = 500;
+    const BATCH_SIZE = 5;
+    const fromBlock = Math.max(0, currentBlock - SCAN_BLOCKS);
+    const blockNums: number[] = [];
+    for (let i = currentBlock; i >= fromBlock; i--) blockNums.push(i);
+
+    const addrLower = address.toLowerCase();
     const txList: Transaction[] = [];
-    for (let i = currentBlock; i >= fromBlock && txList.length < 20; i--) {
+    const seenHashes = new Set<string>();
+
+    for (let b = 0; b < blockNums.length && txList.length < 25; b += BATCH_SIZE) {
       if (this.chainId() !== snapshotChainId) break;
-      const block = await p.getBlock(i, true);
-      if (!block?.transactions) continue;
-      for (const txHash of block.transactions) {
+
+      const batch = blockNums.slice(b, b + BATCH_SIZE);
+
+      // Fetch block headers only (prefetchTxs=false) to get tx hashes cheaply
+      const blocks = await Promise.all(
+        batch.map((n) => p.getBlock(n, false).catch(() => null))
+      );
+
+      for (const block of blocks) {
+        if (!block?.transactions?.length) continue;
         if (this.chainId() !== snapshotChainId) break;
-        const tx = await p.getTransaction(txHash as string);
-        if (!tx) continue;
-        const addrLower = address.toLowerCase();
-        if (tx.from?.toLowerCase() !== addrLower && tx.to?.toLowerCase() !== addrLower) continue;
-        const receipt = await p.getTransactionReceipt(tx.hash);
-        txList.push({
-          hash: tx.hash,
-          from: tx.from,
-          to: tx.to ?? '',
-          value: parseFloat(ethers.formatEther(tx.value)).toFixed(6),
-          timestamp: (block.timestamp ?? 0) * 1000,
-          blockNumber: tx.blockNumber ?? 0,
-          status: receipt?.status === 1 ? 'success' : 'failed',
-          networkChainId: this.chainId() ?? '',
-          explorerUrl: `${this.explorerBaseUrl}/tx/${tx.hash}`,
-        });
-        if (txList.length >= 20) break;
+
+        // Fetch all txs in the block in parallel
+        const txResults = await Promise.all(
+          block.transactions.map((h) =>
+            typeof h === 'string'
+              ? p.getTransaction(h).catch(() => null)
+              : Promise.resolve(h as any)
+          )
+        );
+
+        const relevant = txResults.filter(
+          (tx) =>
+            tx &&
+            !seenHashes.has(tx.hash) &&
+            (tx.from?.toLowerCase() === addrLower || tx.to?.toLowerCase() === addrLower)
+        );
+
+        for (const tx of relevant) {
+          if (!tx || seenHashes.has(tx.hash)) continue;
+          seenHashes.add(tx.hash);
+          const receipt = await p.getTransactionReceipt(tx.hash).catch(() => null);
+          txList.push({
+            hash: tx.hash,
+            from: tx.from ?? '',
+            to: tx.to ?? '',
+            value: parseFloat(ethers.formatEther(tx.value ?? 0n)).toFixed(6),
+            timestamp: (block.timestamp ?? 0) * 1000,
+            blockNumber: tx.blockNumber ?? block.number ?? 0,
+            status: receipt?.status === 1 ? 'success' : 'failed',
+            networkChainId: this.chainId() ?? '',
+            explorerUrl: `${this.explorerBaseUrl}/tx/${tx.hash}`,
+          });
+          if (txList.length >= 25) break;
+        }
+
+        if (txList.length >= 25) break;
+      }
+
+      // Show partial results progressively
+      if (txList.length > 0) {
+        this.transactions.set([...txList]);
       }
     }
-    this.transactions.set(txList);
+
+    this.transactions.set([...txList]);
   }
 
   // ── Error handling ─────────────────────────────────────────────────────────
