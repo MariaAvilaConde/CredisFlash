@@ -26,5 +26,10 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./components/network-manager/network-manager').then((m) => m.NetworkManagerComponent),
   },
+  {
+    path: 'balance',
+    loadComponent: () =>
+      import('./components/balance-checker/balance-checker').then((m) => m.BalanceCheckerComponent),
+  },
   { path: '**', redirectTo: '' },
 ];

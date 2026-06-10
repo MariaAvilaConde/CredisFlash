@@ -299,6 +299,23 @@ export class Web3Service {
     this.clearError();
   }
 
+  /** Full logout: revoke MetaMask permissions so it asks for approval again next time */
+  async fullLogout(): Promise<void> {
+    const raw = this.rawProvider ?? window.ethereum;
+    try {
+      if (raw?.request) {
+        await raw.request({
+          method: 'wallet_revokePermissions',
+          params: [{ eth_accounts: {} }],
+        });
+      }
+    } catch {
+      // Some wallets don't support revokePermissions — just disconnect locally
+    } finally {
+      await this.disconnectWallet();
+    }
+  }
+
   // ── Provider management ────────────────────────────────────────────────────
   private refreshProvider(): void {
     const raw = this.rawProvider ?? window.ethereum;

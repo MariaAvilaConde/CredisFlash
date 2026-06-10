@@ -16,6 +16,7 @@
          (click)="menuOpen.set(false)">
         Inicio
       </a>
+      <a routerLink="/balance" routerLinkActive="active" class="nav-link" (click)="menuOpen.set(false)">Saldo</a>
 
       @if (web3.isConnected()) {
         <a routerLink="/dashboard" routerLinkActive="active" class="nav-link" (click)="menuOpen.set(false)">Dashboard</a>
@@ -31,9 +32,32 @@
         <div class="wallet-info">
           <div class="network-dot" [class.has-network]="web3.currentNetwork"></div>
           <span class="network-name">{{ web3.currentNetwork?.chainName ?? 'Red desconocida' }}</span>
-          <div class="wallet-address" (click)="disconnect()" title="Click para desconectar">
-            <span class="addr-icon">🦊</span>
-            <span>{{ shortAddress(web3.account()) }}</span>
+          <div class="wallet-dropdown-wrapper">
+            <button class="wallet-address" (click)="toggleWalletMenu()" [class.open]="walletMenuOpen()">
+              <span class="addr-icon">🦊</span>
+              <span>{{ shortAddress(web3.account()) }}</span>
+              <span class="dropdown-arrow">▾</span>
+            </button>
+            @if (walletMenuOpen()) {
+              <div class="wallet-dropdown-backdrop" (click)="closeWalletMenu()"></div>
+              <div class="wallet-dropdown">
+                <button class="dropdown-item" (click)="disconnect()">
+                  <span>🔌</span>
+                  <div class="item-text">
+                    <strong>Desconectar</strong>
+                    <small>Mantiene permisos en MetaMask</small>
+                  </div>
+                </button>
+                <div class="dropdown-divider"></div>
+                <button class="dropdown-item danger" (click)="fullLogout()">
+                  <span>🚪</span>
+                  <div class="item-text">
+                    <strong>Cerrar sesión total</strong>
+                    <small>Revoca permisos en MetaMask</small>
+                  </div>
+                </button>
+              </div>
+            }
           </div>
         </div>
       } @else {

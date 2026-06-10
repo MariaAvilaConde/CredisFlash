@@ -1,0 +1,129 @@
+<div class="checker-page">
+  <div class="page-header">
+    <h1>🔍 Consultar Saldo</h1>
+    <p>Consulta el saldo de cualquier dirección en cualquier red, sin necesidad de conectar tu wallet.</p>
+  </div>
+
+  <div class="checker-layout">
+    <div class="card checker-card">
+      <div class="card-header">
+        <span>💰</span>
+        <h3>Consulta de Saldo</h3>
+      </div>
+
+      <!-- Address -->
+      <div class="form-group">
+        <label for="chk-addr">Dirección Ethereum *</label>
+        <div class="addr-input-row">
+          <input
+            id="chk-addr"
+            type="text"
+            class="form-input"
+            [class.valid]="isValidAddress(address())"
+            [class.invalid]="address().length > 0 && !isValidAddress(address())"
+            placeholder="0x..."
+            [ngModel]="address()"
+            (ngModelChange)="setAddress($event)"
+          />
+          @if (web3.isConnected()) {
+            <button class="btn-my-addr" (click)="useMyAddress()" title="Usar mi dirección">
+              🦊 Mi wallet
+            </button>
+          }
+        </div>
+        @if (address().length > 0 && !isValidAddress(address())) {
+          <span class="field-error">Dirección Ethereum inválida</span>
+        }
+      </div>
+
+      <!-- Network -->
+      <div class="form-group">
+        <label for="chk-net">Red *</label>
+        <select
+          id="chk-net"
+          class="form-select"
+          [ngModel]="selectedChainId()"
+          (ngModelChange)="selectedChainId.set($event); result.set(null)"
+        >
+          <option value="">-- Selecciona una red --</option>
+          @for (net of networks; track net.chainId) {
+            <option [value]="net.chainId">{{ net.chainName }}</option>
+          }
+        </select>
+      </div>
+
+      <!-- Error -->
+      @if (error()) {
+        <div class="alert error">
+          <span>❌</span> {{ error() }}
+        </div>
+      }
+
+      <button class="btn-check" [disabled]="!canCheck" (click)="checkBalance()">
+        @if (isLoading()) {
+          <span class="spinner"></span> Consultando...
+        } @else {
+          🔍 Consultar Saldo
+        }
+      </button>
+    </div>
+
+    <!-- Result -->
+    @if (result()) {
+      <div class="card result-card">
+        <!-- Primary: native token balance -->
+        <div class="result-icon">💰</div>
+        <div class="result-balance">
+          {{ result()!.balance }}
+          <span class="result-symbol">{{ result()!.symbol }}</span>
+        </div>
+
+        <!-- USD value (mainnets only) -->
+        @if (result()!.valueUsd != null) {
+          <div class="result-usd">
+            ≈ {{ formatUsd(result()!.valueUsd!) }}
+            <span class="price-hint">@ {{ formatUsd(result()!.priceUsd!) }} / {{ result()!.symbol }}</span>
+          </div>
+        } @else {
+          <div class="result-usd testnet">
+            <span>🧪 Red de prueba — sin valor real en USD</span>
+          </div>
+        }
+
+        <!-- Meta -->
+        <div class="result-meta">
+          <div class="meta-row">
+            <span>Dirección</span>
+            <code>{{ result()!.address.slice(0,10) }}…{{ result()!.address.slice(-8) }}</code>
+          </div>
+          <div class="meta-row">
+            <span>Red</span>
+            <strong>{{ result()!.network }}</strong>
+          </div>
+          <div class="meta-row">
+            <span>Bloque</span>
+            <strong>#{{ result()!.blockNumber.toLocaleString() }}</strong>
+          </div>
+        </div>
+
+        @if (result()!.explorerUrl) {
+          <a [href]="result()!.explorerUrl" target="_blank" rel="noopener" class="explorer-btn">
+            🔍 Ver en explorador ↗
+          </a>
+        }
+      </div>
+    }
+
+    <!-- Info -->
+    <div class="card info-card">
+      <h3>ℹ️ ¿Cómo funciona?</h3>
+      <ul class="info-list">
+        <li>Ingresa cualquier dirección Ethereum válida (comienza con <code>0x</code>).</li>
+        <li>Selecciona la red en la que quieres consultar el saldo.</li>
+        <li>La consulta se realiza directamente al nodo RPC — se usan múltiples nodos en paralelo para máxima precisión.</li>
+        <li>El precio en USD se obtiene de CoinGecko en tiempo real (solo disponible en mainnets).</li>
+        <li>Las redes de prueba (testnets) no tienen valor real en USD.</li>
+      </ul>
+    </div>
+  </div>
+</div>
