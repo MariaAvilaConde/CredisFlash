@@ -1,0 +1,134 @@
+<div class="faucet-page">
+  <div class="page-header">
+    <h1>🚰 Faucet</h1>
+    <p>Obtén tokens de prueba gratuitos para cualquier testnet. No necesitas conectar tu wallet.</p>
+  </div>
+
+  <div class="faucet-layout">
+
+    <!-- Selector card -->
+    <div class="card selector-card">
+      <div class="card-header">
+        <span>⚙️</span>
+        <h3>Configuración</h3>
+      </div>
+
+      <!-- Address -->
+      <div class="form-group">
+        <label for="faucet-addr">Tu dirección Ethereum</label>
+        <div class="addr-row">
+          <input
+            id="faucet-addr"
+            type="text"
+            class="form-input"
+            [class.valid]="isValidAddress(address())"
+            [class.invalid]="address().length > 0 && !isValidAddress(address())"
+            placeholder="0x... (opcional, para pre-rellenar faucets)"
+            [ngModel]="address()"
+            (ngModelChange)="setAddress($event)"
+          />
+          @if (address().length > 0 && isValidAddress(address())) {
+            <button class="btn-copy" (click)="copyAddress()" title="Copiar dirección">📋</button>
+          }
+          @if (web3.isConnected()) {
+            <button class="btn-my-addr" (click)="useMyAddress()">🦊 Mi wallet</button>
+          }
+        </div>
+        @if (address().length > 0 && !isValidAddress(address())) {
+          <span class="field-error">Dirección inválida</span>
+        }
+        @if (isValidAddress(address())) {
+          <span class="field-ok">✓ Dirección válida</span>
+        }
+      </div>
+
+      <!-- Network selector -->
+      <div class="form-group">
+        <label>Selecciona la testnet</label>
+        <div class="network-grid">
+          @for (f of faucets; track f.chainId) {
+            <button
+              class="net-btn"
+              [class.selected]="selectedChainId() === f.chainId"
+              (click)="selectedChainId.set(f.chainId)"
+            >
+              <span class="net-icon">{{ f.icon }}</span>
+              <span class="net-name">{{ f.networkName }}</span>
+              <span class="net-amount">{{ f.amount }}</span>
+            </button>
+          }
+        </div>
+      </div>
+    </div>
+
+    <!-- Faucets list -->
+    @if (selectedFaucet) {
+      <div class="card faucets-card">
+        <div class="card-header">
+          <span>{{ selectedFaucet.icon }}</span>
+          <div>
+            <h3>{{ selectedFaucet.networkName }}</h3>
+            <p class="card-sub">Hasta {{ selectedFaucet.amount }} · Cooldown: {{ selectedFaucet.cooldown }}</p>
+          </div>
+        </div>
+
+        @if (isValidAddress(address())) {
+          <div class="addr-banner">
+            <span>📬</span>
+            <code>{{ address().slice(0,12) }}…{{ address().slice(-10) }}</code>
+            <span class="addr-hint">Los faucets con soporte enviarán a esta dirección</span>
+          </div>
+        }
+
+        <div class="faucet-list">
+          @for (faucet of selectedFaucet.faucets; track faucet.name) {
+            <div class="faucet-item" [class.no-login]="!faucet.requiresLogin">
+              <div class="faucet-info">
+                <div class="faucet-top">
+                  <strong class="faucet-name">{{ faucet.name }}</strong>
+                  <div class="faucet-badges">
+                    @if (!faucet.requiresLogin) {
+                      <span class="badge green">Sin login</span>
+                    } @else {
+                      <span class="badge gray">Requiere cuenta</span>
+                    }
+                    @if (faucet.supportsAddress && isValidAddress(address())) {
+                      <span class="badge blue">Auto-relleno ✓</span>
+                    }
+                  </div>
+                </div>
+                @if (faucet.notes) {
+                  <p class="faucet-notes">{{ faucet.notes }}</p>
+                }
+              </div>
+              <button class="btn-open" (click)="openFaucet(faucet)">
+                Abrir ↗
+              </button>
+            </div>
+          }
+        </div>
+      </div>
+    } @else {
+      <div class="card empty-card">
+        <div class="empty-icon">🚰</div>
+        <p>Selecciona una testnet para ver los faucets disponibles.</p>
+      </div>
+    }
+
+    <!-- Info -->
+    <div class="card info-card">
+      <h3>ℹ️ ¿Cómo usar los faucets?</h3>
+      <ol class="info-list">
+        <li>Escribe tu dirección Ethereum en el campo de arriba (o conecta tu wallet).</li>
+        <li>Selecciona la testnet que necesitas.</li>
+        <li>Pulsa <strong>Abrir</strong> en el faucet deseado — si soporta auto-relleno, tu dirección ya estará cargada.</li>
+        <li>Completa el proceso en la web del faucet y espera la confirmación.</li>
+      </ol>
+      <div class="info-note">
+        <span>⚠️</span>
+        Los tokens de testnet no tienen valor real. Son solo para desarrollo y pruebas.
+      </div>
+    </div>
+
+  </div>
+</div>

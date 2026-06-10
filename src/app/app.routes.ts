@@ -31,5 +31,10 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./components/balance-checker/balance-checker').then((m) => m.BalanceCheckerComponent),
   },
+  {
+    path: 'faucet',
+    loadComponent: () =>
+      import('./components/faucet/faucet').then((m) => m.FaucetComponent),
+  },
   { path: '**', redirectTo: '' },
 ];

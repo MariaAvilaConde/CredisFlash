@@ -1,0 +1,256 @@
+.faucet-page {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem;
+}
+
+.page-header {
+  margin-bottom: 2rem;
+  h1 { font-size: 1.75rem; font-weight: 700; color: #f0f0f5; margin: 0 0 0.5rem; }
+  p  { color: rgba(255,255,255,0.5); font-size: 0.95rem; margin: 0; }
+}
+
+.faucet-layout {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.card {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 16px;
+  padding: 1.5rem;
+}
+
+.card-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+  > span:first-child { font-size: 1.4rem; flex-shrink: 0; margin-top: 2px; }
+  h3 { margin: 0 0 0.2rem; font-size: 1rem; font-weight: 600; color: #f0f0f5; }
+  .card-sub { margin: 0; font-size: 0.8rem; color: rgba(255,255,255,0.4); }
+}
+
+// ── Form ─────────────────────────────────────────────────────────────────────
+.form-group {
+  margin-bottom: 1.5rem;
+  label {
+    display: block;
+    font-size: 0.78rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: rgba(255,255,255,0.45);
+    margin-bottom: 0.6rem;
+  }
+}
+
+.addr-row {
+  display: flex;
+  gap: 0.5rem;
+  align-items: stretch;
+}
+
+.form-input {
+  flex: 1;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 10px;
+  padding: 0.75rem 1rem;
+  color: #f0f0f5;
+  font-size: 0.875rem;
+  outline: none;
+  transition: border-color 0.2s;
+  min-width: 0;
+
+  &:focus   { border-color: rgba(99,102,241,0.6); }
+  &.valid   { border-color: rgba(16,185,129,0.6); }
+  &.invalid { border-color: rgba(239,68,68,0.5); }
+}
+
+.btn-copy, .btn-my-addr {
+  flex-shrink: 0;
+  border-radius: 10px;
+  border: 1px solid;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0 0.875rem;
+  transition: background 0.2s;
+  white-space: nowrap;
+}
+
+.btn-copy {
+  background: rgba(255,255,255,0.06);
+  border-color: rgba(255,255,255,0.1);
+  color: rgba(255,255,255,0.6);
+  &:hover { background: rgba(255,255,255,0.12); }
+}
+
+.btn-my-addr {
+  background: rgba(245,158,11,0.12);
+  border-color: rgba(245,158,11,0.3);
+  color: #f59e0b;
+  &:hover { background: rgba(245,158,11,0.22); }
+}
+
+.field-error { display: block; font-size: 0.78rem; color: #ef4444; margin-top: 0.35rem; }
+.field-ok    { display: block; font-size: 0.78rem; color: #10b981; margin-top: 0.35rem; }
+
+// ── Network grid ──────────────────────────────────────────────────────────────
+.network-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  gap: 0.6rem;
+}
+
+.net-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.15rem;
+  padding: 0.75rem 1rem;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 10px;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.18s;
+
+  .net-icon   { font-size: 1.1rem; }
+  .net-name   { font-size: 0.8rem; font-weight: 600; color: #e2e8f0; }
+  .net-amount { font-size: 0.72rem; color: rgba(255,255,255,0.35); }
+
+  &:hover   { border-color: rgba(99,102,241,0.4); background: rgba(99,102,241,0.08); }
+  &.selected {
+    border-color: rgba(99,102,241,0.7);
+    background: rgba(99,102,241,0.15);
+    .net-name { color: #a5b4fc; }
+  }
+}
+
+// ── Address banner ────────────────────────────────────────────────────────────
+.addr-banner {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  background: rgba(16,185,129,0.08);
+  border: 1px solid rgba(16,185,129,0.2);
+  border-radius: 10px;
+  padding: 0.625rem 1rem;
+  margin-bottom: 1.25rem;
+  font-size: 0.82rem;
+  flex-wrap: wrap;
+
+  code   { color: #10b981; font-size: 0.8rem; }
+  .addr-hint { color: rgba(255,255,255,0.35); font-size: 0.75rem; }
+}
+
+// ── Faucet items ──────────────────────────────────────────────────────────────
+.faucet-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.faucet-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 12px;
+  transition: border-color 0.18s;
+
+  &.no-login { border-color: rgba(16,185,129,0.15); }
+  &:hover    { border-color: rgba(99,102,241,0.3); }
+}
+
+.faucet-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.faucet-top {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.25rem;
+}
+
+.faucet-name { font-size: 0.9rem; font-weight: 600; color: #f0f0f5; }
+
+.faucet-badges {
+  display: flex;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+}
+
+.badge {
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 0.15rem 0.5rem;
+  border-radius: 99px;
+  &.green { background: rgba(16,185,129,0.15); color: #10b981; }
+  &.gray  { background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.45); }
+  &.blue  { background: rgba(99,102,241,0.15); color: #818cf8; }
+}
+
+.faucet-notes {
+  font-size: 0.78rem;
+  color: rgba(255,255,255,0.35);
+  margin: 0;
+}
+
+.btn-open {
+  flex-shrink: 0;
+  padding: 0.5rem 1.25rem;
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  border: none;
+  border-radius: 8px;
+  color: #fff;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.2s, transform 0.1s;
+  &:hover  { opacity: 0.87; transform: translateY(-1px); }
+  &:active { transform: scale(0.97); }
+}
+
+// ── Empty ─────────────────────────────────────────────────────────────────────
+.empty-card {
+  text-align: center;
+  padding: 3rem 1.5rem;
+  .empty-icon { font-size: 3rem; margin-bottom: 0.75rem; }
+  p { color: rgba(255,255,255,0.4); font-size: 0.9rem; margin: 0; }
+}
+
+// ── Info ─────────────────────────────────────────────────────────────────────
+.info-card {
+  h3 { font-size: 0.95rem; font-weight: 600; color: #f0f0f5; margin: 0 0 0.75rem; }
+  .info-list {
+    padding-left: 1.25rem;
+    margin: 0 0 1rem;
+    li {
+      color: rgba(255,255,255,0.55);
+      font-size: 0.875rem;
+      line-height: 1.6;
+      margin-bottom: 0.4rem;
+    }
+  }
+}
+
+.info-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  background: rgba(245,158,11,0.08);
+  border: 1px solid rgba(245,158,11,0.2);
+  border-radius: 8px;
+  padding: 0.625rem 0.875rem;
+  font-size: 0.8rem;
+  color: rgba(245,158,11,0.8);
+}
