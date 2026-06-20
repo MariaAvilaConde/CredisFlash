@@ -36,5 +36,10 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./components/faucet/faucet').then((m) => m.FaucetComponent),
   },
+  {
+    path: 'faucet-history',
+    loadComponent: () =>
+      import('./components/faucet-history/faucet-history').then((m) => m.FaucetHistoryComponent),
+  },
   { path: '**', redirectTo: '' },
 ];

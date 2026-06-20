@@ -1,0 +1,191 @@
+<div class="fh-page">
+  <div class="page-header">
+    <h1>📋 Historial del Faucet</h1>
+    <p>Consulta las últimas solicitudes atendidas por los faucets públicos. Sin iniciar sesión.</p>
+  </div>
+
+  <div class="fh-layout">
+
+    <!-- Filters -->
+    <div class="card filters-card">
+      <div class="card-header">
+        <span>🔎</span>
+        <h3>Filtros</h3>
+      </div>
+
+      <div class="filters-grid">
+        <!-- Chain selector -->
+        <div class="form-group">
+          <label>Red</label>
+          <div class="chain-chips">
+            @for (chain of availableChains(); track chain.chainId) {
+              <button
+                class="chain-chip"
+                [class.active]="selectedChainId() === chain.chainId"
+                (click)="onChainChange(chain.chainId)"
+              >
+                {{ chain.icon }} {{ chain.networkName }}
+              </button>
+            }
+          </div>
+        </div>
+
+        <!-- Faucet selector -->
+        @if (selectedChainId()) {
+          <div class="form-group">
+            <label>Faucet</label>
+            <div class="faucet-chips">
+              @for (w of walletsForChain(); track w.address) {
+                <button
+                  class="faucet-chip"
+                  [class.active]="selectedFaucetAddr() === w.address"
+                  (click)="onFaucetChange(w.address)"
+                >
+                  <span>{{ w.name }}</span>
+                  <code>{{ w.address.slice(0,8) }}…</code>
+                </button>
+              }
+            </div>
+          </div>
+        }
+
+        <!-- Recipient filter -->
+        @if (transactions().length > 0) {
+          <div class="form-group">
+            <label>Filtrar por dirección destino</label>
+            <input
+              type="text"
+              class="form-input"
+              placeholder="0x... (opcional)"
+              [ngModel]="filterAddress()"
+              (ngModelChange)="filterAddress.set($event ?? '')"
+            />
+          </div>
+        }
+      </div>
+
+      <div class="filter-actions">
+        @if (selectedWallet()) {
+          <div class="wallet-info-banner">
+            <span>{{ selectedWallet()!.icon }}</span>
+            <div>
+              <strong>{{ selectedWallet()!.name }}</strong>
+              <code>{{ selectedWallet()!.address }}</code>
+            </div>
+            <a [href]="selectedWallet()!.explorerBase + '/address/' + selectedWallet()!.address"
+               target="_blank" rel="noopener" class="btn-explorer-sm">
+              Ver en explorador ↗
+            </a>
+          </div>
+        }
+
+        <button class="btn-load" [disabled]="!canLoad" (click)="loadHistory()">
+          @if (isLoading()) {
+            <span class="spinner"></span>
+            Escaneando bloques... {{ scanProgress() > 0 ? '(' + scanProgress() + '%)' : '' }}
+          } @else {
+            🔍 Cargar historial (últimos 300 bloques)
+          }
+        </button>
+      </div>
+    </div>
+
+    <!-- Error -->
+    @if (error()) {
+      <div class="alert error"><span>❌</span> {{ error() }}</div>
+    }
+
+    <!-- Results -->
+    @if (isLoading() && transactions().length === 0) {
+      <div class="card loading-card">
+        <div class="loading-spinner"></div>
+        <p>Escaneando los últimos bloques…</p>
+        <small>Esto puede tardar unos segundos</small>
+      </div>
+    }
+
+    @if (transactions().length > 0) {
+      <!-- Stats -->
+      <div class="stats-row">
+        <div class="stat-chip">
+          <span class="stat-n">{{ filteredTxs().length }}</span>
+          <span>Solicitudes</span>
+        </div>
+        <div class="stat-chip">
+          <span class="stat-n success">{{ filteredTxs().length }}</span>
+          <span>En {{ lastScannedBlocks() }} bloques</span>
+        </div>
+        @if (selectedWallet()) {
+          <div class="stat-chip">
+            <span class="stat-n">{{ selectedWallet()!.symbol }}</span>
+            <span>Token</span>
+          </div>
+        }
+      </div>
+
+      <!-- Table -->
+      <div class="card table-card">
+        <div class="table-header">
+          <span>Hash</span>
+          <span>Destinatario</span>
+          <span>Cantidad</span>
+          <span>Bloque</span>
+          <span>Fecha</span>
+          <span>Estado</span>
+          <span></span>
+        </div>
+
+        @for (tx of filteredTxs(); track tx.hash) {
+          <div class="table-row" [class.failed]="tx.status === 'failed'">
+            <div class="cell-hash">
+              <code>{{ shortHash(tx.hash) }}</code>
+            </div>
+            <div class="cell-addr">
+              <code>{{ shortAddr(tx.to) }}</code>
+            </div>
+            <div class="cell-amount">
+              <span class="amount-val">+{{ tx.value }}</span>
+              <small>{{ tx.symbol }}</small>
+            </div>
+            <div class="cell-block">#{{ tx.blockNumber.toLocaleString() }}</div>
+            <div class="cell-date">{{ tx.timestamp | date:'dd/MM/yy HH:mm' }}</div>
+            <div class="cell-status">
+              <span class="status-badge" [class]="tx.status">{{ tx.status }}</span>
+            </div>
+            <div class="cell-link">
+              <a [href]="tx.explorerUrl" target="_blank" rel="noopener" class="btn-mini" title="Ver en explorador">↗</a>
+            </div>
+          </div>
+        }
+
+        @if (filteredTxs().length === 0 && filterAddress()) {
+          <div class="empty-filter">
+            <span>🔍</span>
+            <p>Ninguna solicitud coincide con esa dirección.</p>
+          </div>
+        }
+      </div>
+    }
+
+    @if (!isLoading() && transactions().length === 0 && selectedFaucetAddr()) {
+      <div class="card empty-card">
+        <div class="empty-icon">📭</div>
+        <p>No se encontraron solicitudes recientes.</p>
+        <small>Pulsa "Cargar historial" para escanear los últimos bloques.</small>
+      </div>
+    }
+
+    <!-- Info -->
+    <div class="card info-card">
+      <h3>ℹ️ ¿Cómo funciona?</h3>
+      <ul class="info-list">
+        <li>Selecciona la <strong>red</strong> y el <strong>faucet</strong> que quieres consultar.</li>
+        <li>La app escanea los últimos bloques buscando transacciones <em>salientes</em> de la wallet del faucet.</li>
+        <li>Cada fila representa una solicitud atendida — alguien recibió tokens del faucet.</li>
+        <li>Puedes filtrar por dirección destino para ver si una dirección específica recibió fondos.</li>
+        <li>No se necesita ningún login ni wallet conectada.</li>
+      </ul>
+    </div>
+
+  </div>
+</div>

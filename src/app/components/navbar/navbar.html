@@ -16,8 +16,9 @@
          (click)="menuOpen.set(false)">
         Inicio
       </a>
-      <a routerLink="/balance" routerLinkActive="active" class="nav-link" (click)="menuOpen.set(false)">Saldo</a>
-      <a routerLink="/faucet"  routerLinkActive="active" class="nav-link" (click)="menuOpen.set(false)">Faucet</a>
+      <a routerLink="/balance"        routerLinkActive="active" class="nav-link" (click)="menuOpen.set(false)">Saldo</a>
+      <a routerLink="/faucet"         routerLinkActive="active" class="nav-link" (click)="menuOpen.set(false)">Faucet</a>
+      <a routerLink="/faucet-history" routerLinkActive="active" class="nav-link" (click)="menuOpen.set(false)">Historial Faucet</a>
 
       @if (web3.isConnected()) {
         <a routerLink="/dashboard" routerLinkActive="active" class="nav-link" (click)="menuOpen.set(false)">Dashboard</a>

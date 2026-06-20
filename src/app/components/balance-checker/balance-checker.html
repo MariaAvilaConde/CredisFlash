@@ -1,20 +1,26 @@
 <div class="checker-page">
   <div class="page-header">
     <h1>🔍 Consultar Saldo</h1>
-    <p>Consulta el saldo de cualquier dirección en cualquier red, sin necesidad de conectar tu wallet.</p>
+    <p>Consulta el saldo de cualquier dirección en una o múltiples redes simultáneamente.</p>
+  </div>
+
+  <!-- Mode tabs -->
+  <div class="mode-tabs">
+    <button class="mode-tab" [class.active]="mode() === 'single'" (click)="mode.set('single')">
+      🌐 Una red
+    </button>
+    <button class="mode-tab" [class.active]="mode() === 'multi'" (click)="mode.set('multi')">
+      ⚡ Consulta masiva
+    </button>
   </div>
 
   <div class="checker-layout">
-    <div class="card checker-card">
-      <div class="card-header">
-        <span>💰</span>
-        <h3>Consulta de Saldo</h3>
-      </div>
 
-      <!-- Address -->
-      <div class="form-group">
-        <label for="chk-addr">Dirección Ethereum *</label>
-        <div class="addr-input-row">
+    <!-- Shared address input -->
+    <div class="card">
+      <div class="form-group" style="margin-bottom: 0">
+        <label for="chk-addr">Dirección Ethereum</label>
+        <div class="addr-row">
           <input
             id="chk-addr"
             type="text"
@@ -25,104 +31,182 @@
             [ngModel]="address()"
             (ngModelChange)="setAddress($event)"
           />
+          @if (isValidAddress(address())) {
+            <button class="btn-icon" (click)="copyAddress()" title="Copiar">📋</button>
+          }
           @if (web3.isConnected()) {
-            <button class="btn-my-addr" (click)="useMyAddress()" title="Usar mi dirección">
-              🦊 Mi wallet
-            </button>
+            <button class="btn-my-addr" (click)="useMyAddress()">🦊 Mi wallet</button>
           }
         </div>
         @if (address().length > 0 && !isValidAddress(address())) {
-          <span class="field-error">Dirección Ethereum inválida</span>
+          <span class="field-error">Dirección inválida</span>
         }
       </div>
-
-      <!-- Network -->
-      <div class="form-group">
-        <label for="chk-net">Red *</label>
-        <select
-          id="chk-net"
-          class="form-select"
-          [ngModel]="selectedChainId()"
-          (ngModelChange)="selectedChainId.set($event); result.set(null)"
-        >
-          <option value="">-- Selecciona una red --</option>
-          @for (net of networks; track net.chainId) {
-            <option [value]="net.chainId">{{ net.chainName }}</option>
-          }
-        </select>
-      </div>
-
-      <!-- Error -->
-      @if (error()) {
-        <div class="alert error">
-          <span>❌</span> {{ error() }}
-        </div>
-      }
-
-      <button class="btn-check" [disabled]="!canCheck" (click)="checkBalance()">
-        @if (isLoading()) {
-          <span class="spinner"></span> Consultando...
-        } @else {
-          🔍 Consultar Saldo
-        }
-      </button>
     </div>
 
-    <!-- Result -->
-    @if (result()) {
-      <div class="card result-card">
-        <!-- Primary: native token balance -->
-        <div class="result-icon">💰</div>
-        <div class="result-balance">
-          {{ result()!.balance }}
-          <span class="result-symbol">{{ result()!.symbol }}</span>
+    <!-- ══ SINGLE MODE ══ -->
+    @if (mode() === 'single') {
+      <div class="card">
+        <div class="form-group" style="margin-bottom:1rem">
+          <label for="chk-net">Red</label>
+          <select
+            id="chk-net"
+            class="form-select"
+            [ngModel]="selectedChainId()"
+            (ngModelChange)="selectedChainId.set($event); singleResult.set(null)"
+          >
+            <option value="">-- Selecciona una red --</option>
+            @for (net of networks; track net.chainId) {
+              <option [value]="net.chainId">{{ getIcon(net.chainId) }} {{ net.chainName }}</option>
+            }
+          </select>
         </div>
 
-        <!-- USD value (mainnets only) -->
-        @if (result()!.valueUsd != null) {
-          <div class="result-usd">
-            ≈ {{ formatUsd(result()!.valueUsd!) }}
-            <span class="price-hint">@ {{ formatUsd(result()!.priceUsd!) }} / {{ result()!.symbol }}</span>
-          </div>
-        } @else {
-          <div class="result-usd testnet">
-            <span>🧪 Red de prueba — sin valor real en USD</span>
-          </div>
+        @if (singleError()) {
+          <div class="alert error"><span>❌</span> {{ singleError() }}</div>
         }
 
-        <!-- Meta -->
-        <div class="result-meta">
-          <div class="meta-row">
-            <span>Dirección</span>
-            <code>{{ result()!.address.slice(0,10) }}…{{ result()!.address.slice(-8) }}</code>
-          </div>
-          <div class="meta-row">
-            <span>Red</span>
-            <strong>{{ result()!.network }}</strong>
-          </div>
-          <div class="meta-row">
-            <span>Bloque</span>
-            <strong>#{{ result()!.blockNumber.toLocaleString() }}</strong>
-          </div>
-        </div>
-
-        @if (result()!.explorerUrl) {
-          <a [href]="result()!.explorerUrl" target="_blank" rel="noopener" class="explorer-btn">
-            🔍 Ver en explorador ↗
-          </a>
-        }
+        <button
+          class="btn-check"
+          [disabled]="!isValidAddress(address()) || !selectedChainId() || singleLoading()"
+          (click)="checkBalance()"
+        >
+          @if (singleLoading()) { <span class="spinner"></span> Consultando... }
+          @else { 🔍 Consultar Saldo }
+        </button>
       </div>
+
+      @if (singleResult()) {
+        <div class="card result-single">
+          <div class="res-icon">{{ singleResult()!.icon }}</div>
+          <div class="res-balance">
+            {{ singleResult()!.balance }}
+            <span>{{ singleResult()!.symbol }}</span>
+          </div>
+          @if (singleResult()!.valueUsd != null) {
+            <div class="res-usd">
+              ≈ {{ formatUsd(singleResult()!.valueUsd!) }}
+              <small>@ {{ formatUsd(singleResult()!.priceUsd!) }} / {{ singleResult()!.symbol }}</small>
+            </div>
+          } @else {
+            <div class="res-usd testnet">🧪 Red de prueba — sin valor real en USD</div>
+          }
+          <div class="res-meta">
+            <div class="meta-row"><span>Red</span><strong>{{ singleResult()!.network }}</strong></div>
+            <div class="meta-row"><span>Bloque</span><strong>#{{ singleResult()!.blockNumber.toLocaleString() }}</strong></div>
+          </div>
+          @if (singleResult()!.explorerUrl) {
+            <a [href]="singleResult()!.explorerUrl" target="_blank" rel="noopener" class="btn-explorer">🔍 Ver en explorador ↗</a>
+          }
+        </div>
+      }
+    }
+
+    <!-- ══ MULTI MODE ══ -->
+    @if (mode() === 'multi') {
+      <div class="card">
+        <div class="multi-header">
+          <span class="multi-title">Selecciona las redes a consultar</span>
+          <div class="quick-btns">
+            <button class="btn-quick" (click)="selectAll()">Todas</button>
+            <button class="btn-quick" (click)="selectTestnets()">Testnets</button>
+            <button class="btn-quick" (click)="selectMainnets()">Mainnets</button>
+            <button class="btn-quick danger" (click)="selectNone()">Ninguna</button>
+          </div>
+        </div>
+
+        <div class="network-grid">
+          @for (net of networks; track net.chainId) {
+            <button
+              class="net-chip"
+              [class.selected]="isSelected(net.chainId)"
+              (click)="toggleNetwork(net.chainId)"
+            >
+              <span>{{ getIcon(net.chainId) }}</span>
+              <span class="chip-name">{{ net.chainName }}</span>
+              @if (isSelected(net.chainId)) { <span class="chip-check">✓</span> }
+            </button>
+          }
+        </div>
+
+        <div class="multi-footer">
+          <span class="selected-count">{{ selectedChainIds().size }} red(es) seleccionada(s)</span>
+          <button
+            class="btn-check"
+            [disabled]="!isValidAddress(address()) || selectedChainIds().size === 0 || multiLoading()"
+            (click)="checkAllBalances()"
+          >
+            @if (multiLoading()) { <span class="spinner"></span> Consultando... }
+            @else { ⚡ Consultar todas }
+          </button>
+        </div>
+      </div>
+
+      <!-- Multi results -->
+      @if (multiResults().length > 0) {
+        <!-- Total USD summary (mainnets only) -->
+        @if (multiHasUsd()) {
+          <div class="card total-card">
+            <div class="total-label">💵 Valor total estimado (mainnets)</div>
+            <div class="total-value">{{ formatUsd(multiTotalUsd()) }}</div>
+          </div>
+        }
+
+        <div class="card results-table-card">
+          <div class="results-table-header">
+            <span>Red</span>
+            <span>Saldo</span>
+            <span>Valor USD</span>
+            <span>Bloque</span>
+            <span></span>
+          </div>
+          @for (r of multiResults(); track r.chainId) {
+            <div class="results-row" [class.error]="r.status === 'error'" [class.loading]="r.status === 'loading'">
+              <div class="row-net">
+                <span>{{ r.icon }}</span>
+                <span class="row-net-name">{{ r.network }}</span>
+              </div>
+
+              <div class="row-balance">
+                @if (r.status === 'loading') { <span class="skeleton">…</span> }
+                @else if (r.status === 'error') { <span class="err-text">Error</span> }
+                @else {
+                  <strong>{{ r.balance }}</strong>
+                  <small>{{ r.symbol }}</small>
+                }
+              </div>
+
+              <div class="row-usd">
+                @if (r.status === 'loading') { <span class="skeleton">…</span> }
+                @else if (r.status === 'error') { <span>—</span> }
+                @else if (r.valueUsd != null) { <span class="usd-val">{{ formatUsd(r.valueUsd) }}</span> }
+                @else { <span class="testnet-badge">Testnet</span> }
+              </div>
+
+              <div class="row-block">
+                @if (r.status === 'success') { <span>#{{ r.blockNumber.toLocaleString() }}</span> }
+                @else { <span>—</span> }
+              </div>
+
+              <div class="row-actions">
+                @if (r.explorerUrl) {
+                  <a [href]="r.explorerUrl" target="_blank" rel="noopener" class="btn-mini" title="Ver en explorador">↗</a>
+                }
+              </div>
+            </div>
+          }
+        </div>
+      }
     }
 
     <!-- Info -->
     <div class="card info-card">
       <h3>ℹ️ ¿Cómo funciona?</h3>
       <ul class="info-list">
-        <li>Ingresa cualquier dirección Ethereum válida (comienza con <code>0x</code>).</li>
-        <li>Selecciona la red en la que quieres consultar el saldo.</li>
-        <li>La consulta se realiza directamente al nodo RPC — se usan múltiples nodos en paralelo para máxima precisión.</li>
-        <li>El precio en USD se obtiene de CoinGecko en tiempo real (solo disponible en mainnets).</li>
-        <li>Las redes de prueba (testnets) no tienen valor real en USD.</li>
+        <li><strong>Una red</strong>: consulta rápida en la red seleccionada con precio USD en tiempo real (mainnets).</li>
+        <li><strong>Consulta masiva</strong>: selecciona múltiples redes y consulta todas en paralelo simultáneamente.</li>
+        <li>Se usan múltiples nodos RPC en paralelo por red para garantizar el dato más actualizado.</li>
+        <li>No es necesario conectar tu wallet.</li>
       </ul>
     </div>
   </div>
