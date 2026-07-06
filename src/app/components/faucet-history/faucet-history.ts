@@ -1,8 +1,9 @@
-import { Component, inject, signal, computed } from '@angular/core';
-import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { Component, inject, signal, computed, effect } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { DatePipe } from '@angular/common';
 import { ethers } from 'ethers';
 import { SUPPORTED_NETWORKS } from '../../models/network.model';
+import { Web3Service } from '../../services/web3.service';
 import { ToastService } from '../../services/toast.service';
 
 export interface FaucetWallet {
@@ -83,6 +84,7 @@ export const FAUCET_WALLETS: FaucetWallet[] = [
   styleUrl: './faucet-history.scss',
 })
 export class FaucetHistoryComponent {
+  readonly web3 = inject(Web3Service);
   readonly toast = inject(ToastService);
 
   // ── Filters ───────────────────────────────────────────────────────────────
@@ -103,7 +105,9 @@ export class FaucetHistoryComponent {
   readonly availableChains = computed(() => {
     const seen = new Map<string, { chainId: string; networkName: string; icon: string }>();
     for (const w of this.faucetWallets) {
-      if (!seen.has(w.chainId)) seen.set(w.chainId, { chainId: w.chainId, networkName: w.networkName, icon: w.icon });
+      if (!seen.has(w.chainId)) {
+        seen.set(w.chainId, { chainId: w.chainId, networkName: w.networkName, icon: w.icon });
+      }
     }
     return [...seen.values()];
   });
@@ -113,7 +117,9 @@ export class FaucetHistoryComponent {
   );
 
   readonly selectedWallet = computed(() =>
-    this.faucetWallets.find(w => w.address === this.selectedFaucetAddr() && w.chainId === this.selectedChainId())
+    this.faucetWallets.find(
+      w => w.address === this.selectedFaucetAddr() && w.chainId === this.selectedChainId()
+    )
   );
 
   readonly filteredTxs = computed(() => {
@@ -122,11 +128,37 @@ export class FaucetHistoryComponent {
     return this.transactions().filter(tx => tx.to.toLowerCase().includes(filter));
   });
 
+  // ── Auto-select connected network ─────────────────────────────────────────
+  constructor() {
+    effect(() => {
+      const chainId = this.web3.chainId();
+      if (chainId && this.availableChains().some(c => c.chainId === chainId)) {
+        // Only auto-select if user hasn't already chosen a chain
+        if (!this.selectedChainId()) {
+          this.selectedChainId.set(chainId);
+          // Auto-select the first faucet for that chain
+          const firstWallet = this.faucetWallets.find(w => w.chainId === chainId);
+          if (firstWallet) {
+            this.selectedFaucetAddr.set(firstWallet.address);
+          }
+        }
+      }
+    });
+  }
+
+  // ── Event handlers ────────────────────────────────────────────────────────
   onChainChange(chainId: string): void {
     this.selectedChainId.set(chainId);
     this.selectedFaucetAddr.set('');
     this.transactions.set([]);
     this.error.set(null);
+    this.filterAddress.set('');
+
+    // Auto-select first faucet for this chain
+    const firstWallet = this.faucetWallets.find(w => w.chainId === chainId);
+    if (firstWallet) {
+      this.selectedFaucetAddr.set(firstWallet.address);
+    }
   }
 
   onFaucetChange(addr: string): void {
@@ -146,6 +178,7 @@ export class FaucetHistoryComponent {
   shortHash(h: string): string { return h.slice(0, 10) + '…' + h.slice(-8); }
   shortAddr(a: string): string { return a.slice(0, 8) + '…' + a.slice(-6); }
 
+  // ── Load history ──────────────────────────────────────────────────────────
   async loadHistory(): Promise<void> {
     const wallet = this.selectedWallet();
     if (!wallet) return;
@@ -165,13 +198,15 @@ export class FaucetHistoryComponent {
       if (this.isLoading()) {
         this.isLoading.set(false);
         if (this.transactions().length === 0) {
-          this.error.set('La búsqueda tardó demasiado. El RPC de esta red es lento — intenta de nuevo.');
+          this.error.set(
+            'La búsqueda tardó demasiado. El RPC de esta red es lento — intenta de nuevo.'
+          );
         }
       }
     }, 45_000);
 
     const SCAN_BLOCKS = 300;  // enough to cover ~1h of blocks
-    const BATCH = 15;          // parallel batches
+    const BATCH = 15;
 
     try {
       // Connect to fastest RPC
@@ -199,10 +234,14 @@ export class FaucetHistoryComponent {
       const txList: FaucetTx[] = [];
       const seen = new Set<string>();
 
-      for (let b = 0; b < blockNums.length && txList.length < 50 && !controller.cancelled; b += BATCH) {
+      for (
+        let b = 0;
+        b < blockNums.length && txList.length < 50 && !controller.cancelled;
+        b += BATCH
+      ) {
         const batch = blockNums.slice(b, b + BATCH);
 
-        // Fetch full blocks (prefetchTxs=true) — one call per block, includes all tx data
+        // Fetch full blocks (prefetchTxs=true) — includes all tx data
         const blocks = await Promise.all(
           batch.map(n =>
             Promise.race([
@@ -228,7 +267,7 @@ export class FaucetHistoryComponent {
               blockNumber: tx.blockNumber ?? block.number ?? 0,
               timestamp: (block.timestamp ?? 0) * 1000,
               explorerUrl: `${wallet.explorerBase}/tx/${tx.hash}`,
-              status: 'success', // assume success; receipt fetch skipped for speed
+              status: 'success',
             });
 
             if (txList.length >= 50) break;

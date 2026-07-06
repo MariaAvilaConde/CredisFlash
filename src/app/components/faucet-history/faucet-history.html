@@ -11,6 +11,13 @@
       <div class="card-header">
         <span>🔎</span>
         <h3>Filtros</h3>
+        <!-- Connected network badge -->
+        @if (web3.isConnected() && web3.currentNetwork) {
+          <div class="connected-badge">
+            <span class="dot"></span>
+            Conectado a <strong>{{ web3.currentNetwork.chainName }}</strong>
+          </div>
+        }
       </div>
 
       <div class="filters-grid">
@@ -25,6 +32,9 @@
                 (click)="onChainChange(chain.chainId)"
               >
                 {{ chain.icon }} {{ chain.networkName }}
+                @if (web3.chainId() === chain.chainId) {
+                  <span class="current-dot" title="Red conectada">●</span>
+                }
               </button>
             }
           </div>
@@ -72,8 +82,12 @@
               <strong>{{ selectedWallet()!.name }}</strong>
               <code>{{ selectedWallet()!.address }}</code>
             </div>
-            <a [href]="selectedWallet()!.explorerBase + '/address/' + selectedWallet()!.address"
-               target="_blank" rel="noopener" class="btn-explorer-sm">
+            <a
+              [href]="selectedWallet()!.explorerBase + '/address/' + selectedWallet()!.address"
+              target="_blank"
+              rel="noopener"
+              class="btn-explorer-sm"
+            >
               Ver en explorador ↗
             </a>
           </div>
@@ -82,7 +96,8 @@
         <button class="btn-load" [disabled]="!canLoad" (click)="loadHistory()">
           @if (isLoading()) {
             <span class="spinner"></span>
-            Escaneando bloques... {{ scanProgress() > 0 ? '(' + scanProgress() + '%)' : '' }}
+            Escaneando bloques...
+            {{ scanProgress() > 0 ? '(' + scanProgress() + '%)' : '' }}
           } @else {
             🔍 Cargar historial (últimos 300 bloques)
           }
@@ -95,7 +110,7 @@
       <div class="alert error"><span>❌</span> {{ error() }}</div>
     }
 
-    <!-- Results -->
+    <!-- Loading skeleton -->
     @if (isLoading() && transactions().length === 0) {
       <div class="card loading-card">
         <div class="loading-spinner"></div>
@@ -104,6 +119,7 @@
       </div>
     }
 
+    <!-- Results -->
     @if (transactions().length > 0) {
       <!-- Stats -->
       <div class="stats-row">
@@ -153,7 +169,13 @@
               <span class="status-badge" [class]="tx.status">{{ tx.status }}</span>
             </div>
             <div class="cell-link">
-              <a [href]="tx.explorerUrl" target="_blank" rel="noopener" class="btn-mini" title="Ver en explorador">↗</a>
+              <a
+                [href]="tx.explorerUrl"
+                target="_blank"
+                rel="noopener"
+                class="btn-mini"
+                title="Ver en explorador"
+              >↗</a>
             </div>
           </div>
         }
@@ -170,8 +192,23 @@
     @if (!isLoading() && transactions().length === 0 && selectedFaucetAddr()) {
       <div class="card empty-card">
         <div class="empty-icon">📭</div>
-        <p>No se encontraron solicitudes recientes.</p>
+        <p>No se han cargado solicitudes aún.</p>
         <small>Pulsa "Cargar historial" para escanear los últimos bloques.</small>
+      </div>
+    }
+
+    @if (!selectedChainId()) {
+      <div class="card empty-card">
+        <div class="empty-icon">🔎</div>
+        <p>Selecciona una red para empezar.</p>
+        <small>
+          @if (web3.isConnected()) {
+            Tu wallet está conectada a {{ web3.currentNetwork?.chainName ?? 'una red desconocida' }}
+            — selecciónala arriba si aparece en la lista.
+          } @else {
+            No es necesario conectar tu wallet.
+          }
+        </small>
       </div>
     }
 
@@ -180,9 +217,13 @@
       <h3>ℹ️ ¿Cómo funciona?</h3>
       <ul class="info-list">
         <li>Selecciona la <strong>red</strong> y el <strong>faucet</strong> que quieres consultar.</li>
-        <li>La app escanea los últimos bloques buscando transacciones <em>salientes</em> de la wallet del faucet.</li>
+        <li>
+          Si tienes la wallet conectada, la red activa se
+          <strong>selecciona automáticamente</strong>.
+        </li>
+        <li>La app escanea los últimos bloques buscando transacciones salientes del faucet.</li>
         <li>Cada fila representa una solicitud atendida — alguien recibió tokens del faucet.</li>
-        <li>Puedes filtrar por dirección destino para ver si una dirección específica recibió fondos.</li>
+        <li>Puedes filtrar por dirección destino para ver si una dirección recibió fondos.</li>
         <li>No se necesita ningún login ni wallet conectada.</li>
       </ul>
     </div>
